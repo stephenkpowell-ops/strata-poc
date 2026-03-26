@@ -38,7 +38,7 @@ import type {
 // FIXTURE DATA
 // ─────────────────────────────────────────────────────────────────────────────
 
-const FIXTURE_USER: User = {
+export const FIXTURE_USER: User = {
   id: 'user_mock_001',
   email: 'alex@techcorp.com',
   name: 'Alex Chen',
@@ -54,7 +54,7 @@ const FIXTURE_USER: User = {
   updatedAt: new Date(),
 };
 
-const FIXTURE_SCORES: StressScore[] = Array.from({ length: 14 }, (_, i) => ({
+export const FIXTURE_SCORES: StressScore[] = Array.from({ length: 14 }, (_, i) => ({
   id: `score_${i}`,
   userId: FIXTURE_USER.id,
   date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000),
@@ -66,7 +66,7 @@ const FIXTURE_SCORES: StressScore[] = Array.from({ length: 14 }, (_, i) => ({
   updatedAt: new Date(),
 }));
 
-const FIXTURE_EVENTS: CalendarEvent[] = [
+export const FIXTURE_EVENTS: CalendarEvent[] = [
   {
     id: 'evt_001', userId: FIXTURE_USER.id, calendarId: 'cal_work',
     externalId: 'google_001', source: 'google', tag: 'work', category: 'work',
