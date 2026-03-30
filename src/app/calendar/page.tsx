@@ -5,17 +5,16 @@
  *
  * Calendar screen — the core differentiator of the Strata POC.
  *
- * Current state (Step 13 — gap indicators):
+ * Current state (Step 14 — event detail tap-through):
  *   - DayStrip renders across the top with colour-coded stress dots
  *   - Selecting a day filters events to that day and renders them
  *     in time order via EventRow
- *   - GapIndicator is rendered between consecutive events:
- *       >= 30 min gap  → green "Recovery window · Nmin"
- *       < 15 min gap   → amber "No gap — stress peak risk"
- *       15–29 min gap  → nothing (partial buffer, no label)
+ *   - GapIndicator is rendered between consecutive events
+ *   - Tapping an EventRow opens the EventDetail slide-up panel
+ *     showing the full stress breakdown for that event
+ *   - Tapping the backdrop or close button dismisses the panel
  *
- * Step still to come:
- *   Step 14 — Event detail tap-through
+ * Steps 10–14 are now complete.
  */
 
 import { useState } from 'react';
@@ -23,6 +22,9 @@ import { useStrata } from '@/lib/store';
 import DayStrip from '@/components/DayStrip';
 import EventRow from '@/components/EventRow';
 import GapIndicator from '@/components/GapIndicator';
+import EventDetail from '@/components/EventDetail';
+import { CalendarEvent } from '@/lib/interfaces/types';
+import { ScoredEvent } from '@/lib/StressEngine';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -47,8 +49,11 @@ function minutesBetween(endAt: Date, startAt: Date): number {
 export default function CalendarPage() {
   const { scores, events, dailyResult } = useStrata();
 
-  // Default to the most recent day
+  // Selected day tab
   const [selectedIndex, setSelectedIndex] = useState(scores.length - 1);
+
+  // Selected event for the detail panel — null means panel is closed
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   // The date of the selected day tab
   const selectedDate = scores[selectedIndex]?.date;
@@ -63,6 +68,10 @@ export default function CalendarPage() {
     dailyResult.scoredEvents.map(s => [s.eventId, s])
   );
 
+  // Resolve the selected event and its score for the detail panel
+  const selectedEvent    = selectedEventId ? events.find(e => e.id === selectedEventId) ?? null : null;
+  const selectedScored   = selectedEventId ? scoredEventMap.get(selectedEventId) ?? null : null;
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
@@ -70,7 +79,10 @@ export default function CalendarPage() {
       <DayStrip
         scores={scores}
         selectedIndex={selectedIndex}
-        onSelectDay={setSelectedIndex}
+        onSelectDay={(i) => {
+          setSelectedIndex(i);
+          setSelectedEventId(null); // close detail panel when switching days
+        }}
       />
 
       {/* Timeline — steps 11, 12, 13 */}
@@ -85,7 +97,6 @@ export default function CalendarPage() {
             const scoredEvent = scoredEventMap.get(event.id);
             if (!scoredEvent) return null;
 
-            // Compute gap between this event and the next one
             const nextEvent = dayEvents[i + 1];
             const gapMinutes = nextEvent
               ? minutesBetween(new Date(event.endAt), new Date(nextEvent.startAt))
@@ -96,8 +107,8 @@ export default function CalendarPage() {
                 <EventRow
                   calendarEvent={event}
                   scoredEvent={scoredEvent}
+                  onTap={() => setSelectedEventId(event.id)}
                 />
-                {/* Gap indicator between this event and the next */}
                 {gapMinutes !== null && (
                   <GapIndicator gapMinutes={gapMinutes} />
                 )}
@@ -107,6 +118,15 @@ export default function CalendarPage() {
         )}
 
       </div>
+
+      {/* Event detail panel — step 14 */}
+      {selectedEvent && selectedScored && (
+        <EventDetail
+          calendarEvent={selectedEvent}
+          scoredEvent={selectedScored}
+          onClose={() => setSelectedEventId(null)}
+        />
+      )}
 
     </div>
   );

@@ -9,15 +9,22 @@
  *   - Time range (e.g. "9:30 AM – 10:30 AM")
  *   - Work / Personal badge
  *   - Event category label
- *   - Stress points delta (e.g. "+18 pts")
+ *   - Stress points delta (e.g. "+8 pts")
  *
  * Colour coding by totalStressPts (left border + pts label):
  *   orange  (>= 15 pts) — high load
  *   indigo  (6–14 pts)  — medium load
  *   green   (< 6 pts)   — low load / recovery
  *
+ * Tapping the row calls onTap — used by the calendar page to open
+ * the EventDetail slide-up panel for this event.
+ *
  * Usage:
- *   <EventRow event={scoredEvent} calendarEvent={calendarEvent} />
+ *   <EventRow
+ *     calendarEvent={event}
+ *     scoredEvent={scoredEvent}
+ *     onTap={() => setSelectedEventId(event.id)}
+ *   />
  */
 
 import { CalendarEvent } from '@/lib/interfaces/types';
@@ -30,6 +37,7 @@ import { ScoredEvent } from '@/lib/StressEngine';
 interface Props {
   calendarEvent: CalendarEvent;
   scoredEvent:   ScoredEvent;
+  onTap:         () => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,7 +80,7 @@ function getCategoryLabel(category: CalendarEvent['category']): string {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function EventRow({ calendarEvent, scoredEvent }: Props) {
+export default function EventRow({ calendarEvent, scoredEvent, onTap }: Props) {
   const { startAt, endAt, tag, category } = calendarEvent;
   const { totalStressPts } = scoredEvent;
 
@@ -81,8 +89,10 @@ export default function EventRow({ calendarEvent, scoredEvent }: Props) {
   const isPersonal   = tag === 'personal';
 
   return (
-    <div className={`flex items-start gap-3 px-4 py-3 border-l-4 ${borderColour} bg-zinc-900 rounded-r-lg`}>
-
+    <button
+      onClick={onTap}
+      className={`w-full flex items-start gap-3 px-4 py-3 border-l-4 ${borderColour} bg-zinc-900 rounded-r-lg text-left hover:bg-zinc-800 transition-colors active:bg-zinc-700`}
+    >
       {/* Time column */}
       <div className="flex flex-col items-end min-w-[72px]">
         <span className="text-xs font-medium text-zinc-300">
@@ -119,6 +129,6 @@ export default function EventRow({ calendarEvent, scoredEvent }: Props) {
         +{totalStressPts} pts
       </div>
 
-    </div>
+    </button>
   );
 }
