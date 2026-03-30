@@ -54,17 +54,26 @@ export const FIXTURE_USER: User = {
   updatedAt: new Date(),
 };
 
-export const FIXTURE_SCORES: StressScore[] = Array.from({ length: 14 }, (_, i) => ({
-  id: `score_${i}`,
-  userId: FIXTURE_USER.id,
-  date: new Date(Date.now() - (13 - i) * 24 * 60 * 60 * 1000),
-  checkInValue: 50 + Math.floor(Math.random() * 30),
-  calendarPts: 10 + Math.floor(Math.random() * 30),
-  totalScore: 60 + Math.floor(Math.random() * 20),
-  rollingAvg7d: 68,
-  createdAt: new Date(),
-  updatedAt: new Date(),
-}));
+export const FIXTURE_SCORES: StressScore[] = [
+  // Fixed values — no Math.random() to prevent server/client hydration mismatches.
+  // Dates are pinned to specific days so the day strip always renders consistently.
+  // score_13 (2025-03-25) matches the FIXTURE_EVENTS day and has rollingAvg7d: 76
+  // which is above the 70 burnout threshold — the alert banner will fire correctly.
+  { id: 'score_0',  userId: FIXTURE_USER.id, date: new Date('2025-03-12'), checkInValue: 52, calendarPts: 18, totalScore: 70,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_1',  userId: FIXTURE_USER.id, date: new Date('2025-03-13'), checkInValue: 60, calendarPts: 22, totalScore: 82,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_2',  userId: FIXTURE_USER.id, date: new Date('2025-03-14'), checkInValue: 55, calendarPts: 14, totalScore: 69,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_3',  userId: FIXTURE_USER.id, date: new Date('2025-03-15'), checkInValue: 50, calendarPts: 10, totalScore: 60,  rollingAvg7d: 66, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_4',  userId: FIXTURE_USER.id, date: new Date('2025-03-16'), checkInValue: 58, calendarPts: 20, totalScore: 78,  rollingAvg7d: 67, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_5',  userId: FIXTURE_USER.id, date: new Date('2025-03-17'), checkInValue: 62, calendarPts: 24, totalScore: 86,  rollingAvg7d: 70, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_6',  userId: FIXTURE_USER.id, date: new Date('2025-03-18'), checkInValue: 48, calendarPts: 12, totalScore: 60,  rollingAvg7d: 69, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_7',  userId: FIXTURE_USER.id, date: new Date('2025-03-19'), checkInValue: 54, calendarPts: 16, totalScore: 70,  rollingAvg7d: 70, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_8',  userId: FIXTURE_USER.id, date: new Date('2025-03-20'), checkInValue: 65, calendarPts: 28, totalScore: 93,  rollingAvg7d: 72, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_9',  userId: FIXTURE_USER.id, date: new Date('2025-03-21'), checkInValue: 70, calendarPts: 30, totalScore: 100, rollingAvg7d: 74, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_10', userId: FIXTURE_USER.id, date: new Date('2025-03-22'), checkInValue: 60, calendarPts: 18, totalScore: 78,  rollingAvg7d: 75, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_11', userId: FIXTURE_USER.id, date: new Date('2025-03-23'), checkInValue: 55, calendarPts: 14, totalScore: 69,  rollingAvg7d: 74, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_12', userId: FIXTURE_USER.id, date: new Date('2025-03-24'), checkInValue: 63, calendarPts: 22, totalScore: 85,  rollingAvg7d: 74, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_13', userId: FIXTURE_USER.id, date: new Date('2025-03-25'), checkInValue: 58, calendarPts: 42, totalScore: 100, rollingAvg7d: 76, createdAt: new Date(), updatedAt: new Date() },
+];
 
 export const FIXTURE_EVENTS: CalendarEvent[] = [
   {
