@@ -5,16 +5,16 @@
  *
  * Calendar screen — the core differentiator of the Strata POC.
  *
- * Current state (Step 11 — timeline events list):
+ * Current state (Step 13 — gap indicators):
  *   - DayStrip renders across the top with colour-coded stress dots
  *   - Selecting a day filters events to that day and renders them
  *     in time order via EventRow
- *   - Events matching the selected day's date are shown in the timeline
- *   - Empty state shown when no events exist for the selected day
+ *   - GapIndicator is rendered between consecutive events:
+ *       >= 30 min gap  → green "Recovery window · Nmin"
+ *       < 15 min gap   → amber "No gap — stress peak risk"
+ *       15–29 min gap  → nothing (partial buffer, no label)
  *
- * Steps still to come:
- *   Step 12 — Stress colour coding (already implemented via EventRow border)
- *   Step 13 — Gap indicators between events
+ * Step still to come:
  *   Step 14 — Event detail tap-through
  */
 
@@ -22,6 +22,7 @@ import { useState } from 'react';
 import { useStrata } from '@/lib/store';
 import DayStrip from '@/components/DayStrip';
 import EventRow from '@/components/EventRow';
+import GapIndicator from '@/components/GapIndicator';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -33,6 +34,10 @@ function isSameDay(a: Date, b: Date): boolean {
     a.getMonth()    === b.getMonth()    &&
     a.getDate()     === b.getDate()
   );
+}
+
+function minutesBetween(endAt: Date, startAt: Date): number {
+  return Math.round((startAt.getTime() - endAt.getTime()) / 60_000);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,26 +73,35 @@ export default function CalendarPage() {
         onSelectDay={setSelectedIndex}
       />
 
-      {/* Timeline — step 11 */}
-      <div className="flex flex-col flex-1 gap-2 p-4">
+      {/* Timeline — steps 11, 12, 13 */}
+      <div className="flex flex-col flex-1 gap-0 p-4">
 
         {dayEvents.length === 0 ? (
           <div className="flex flex-1 items-center justify-center text-zinc-600 text-sm">
             No events for this day
           </div>
         ) : (
-          dayEvents.map(event => {
+          dayEvents.map((event, i) => {
             const scoredEvent = scoredEventMap.get(event.id);
-
-            // If the event has no scored counterpart, skip it
             if (!scoredEvent) return null;
 
+            // Compute gap between this event and the next one
+            const nextEvent = dayEvents[i + 1];
+            const gapMinutes = nextEvent
+              ? minutesBetween(new Date(event.endAt), new Date(nextEvent.startAt))
+              : null;
+
             return (
-              <EventRow
-                key={event.id}
-                calendarEvent={event}
-                scoredEvent={scoredEvent}
-              />
+              <div key={event.id}>
+                <EventRow
+                  calendarEvent={event}
+                  scoredEvent={scoredEvent}
+                />
+                {/* Gap indicator between this event and the next */}
+                {gapMinutes !== null && (
+                  <GapIndicator gapMinutes={gapMinutes} />
+                )}
+              </div>
             );
           })
         )}
