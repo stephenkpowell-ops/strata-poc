@@ -58,8 +58,9 @@ export const FIXTURE_SCORES: StressScore[] = [
   // Fixed values — no Math.random() to prevent server/client hydration mismatches.
   // Dates use T12:00:00 (noon) so timezone conversion never rolls the date back
   // to the previous day regardless of the user's local timezone.
-  // score_13 (2025-03-25) matches the FIXTURE_EVENTS day and has rollingAvg7d: 76
-  // which is above the 70 burnout threshold — the alert banner will fire correctly.
+  // score_13 (2025-03-25) calendarPts: 28 matches the StressEngine output for
+  // FIXTURE_EVENTS (evt_001: 8pts, evt_002: 14pts, evt_003: 6pts = 28 total).
+  // rollingAvg7d: 76 is above the 70 burnout threshold — alert banner will fire.
   { id: 'score_0',  userId: FIXTURE_USER.id, date: new Date('2025-03-12T12:00:00'), checkInValue: 52, calendarPts: 18, totalScore: 70,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_1',  userId: FIXTURE_USER.id, date: new Date('2025-03-13T12:00:00'), checkInValue: 60, calendarPts: 22, totalScore: 82,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_2',  userId: FIXTURE_USER.id, date: new Date('2025-03-14T12:00:00'), checkInValue: 55, calendarPts: 14, totalScore: 69,  rollingAvg7d: 68, createdAt: new Date(), updatedAt: new Date() },
@@ -73,20 +74,24 @@ export const FIXTURE_SCORES: StressScore[] = [
   { id: 'score_10', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 60, calendarPts: 18, totalScore: 78,  rollingAvg7d: 75, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_11', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 55, calendarPts: 14, totalScore: 69,  rollingAvg7d: 74, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_12', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 63, calendarPts: 22, totalScore: 85,  rollingAvg7d: 74, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_13', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 58, calendarPts: 42, totalScore: 100, rollingAvg7d: 76, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_13', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 58, calendarPts: 28, totalScore: 86,  rollingAvg7d: 76, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 export const FIXTURE_EVENTS: CalendarEvent[] = [
   {
+    // evt_001: first work meeting — base 8pts, no back-to-back penalty (first event)
+    // StressEngine output: baseStressPts: 8, contextSwitchPts: 0, totalStressPts: 8
     id: 'evt_001', userId: FIXTURE_USER.id, calendarId: 'cal_work',
     externalId: 'google_001', source: 'google', tag: 'work', category: 'work',
     title: null, startAt: new Date('2025-03-25T09:30:00'), endAt: new Date('2025-03-25T10:30:00'),
     durationMinutes: 60, attendeeCount: 12, isRecurring: true, recurringGroupId: 'rec_001',
-    baseStressPts: 8, contextSwitchPts: 6, totalStressPts: 18,
+    baseStressPts: 8, contextSwitchPts: 0, totalStressPts: 8,
     scoringDisabled: false, scoringDisabledScope: null, categoryOverriddenByUser: false,
     createdAt: new Date(), updatedAt: new Date(),
   },
   {
+    // evt_002: second work meeting — base 8pts + back-to-back penalty 6pts (0 min gap)
+    // StressEngine output: baseStressPts: 8, contextSwitchPts: 6, totalStressPts: 14
     id: 'evt_002', userId: FIXTURE_USER.id, calendarId: 'cal_work',
     externalId: 'google_002', source: 'google', tag: 'work', category: 'work',
     title: null, startAt: new Date('2025-03-25T10:30:00'), endAt: new Date('2025-03-25T11:30:00'),
@@ -96,11 +101,14 @@ export const FIXTURE_EVENTS: CalendarEvent[] = [
     createdAt: new Date(), updatedAt: new Date(),
   },
   {
+    // evt_003: personal active event — base 4pts + midday penalty 2pts (starts at 12:00)
+    // Gap from evt_002 is exactly 30 min — full buffer, no adjacency penalty
+    // StressEngine output: baseStressPts: 4, contextSwitchPts: 2, totalStressPts: 6
     id: 'evt_003', userId: FIXTURE_USER.id, calendarId: 'cal_personal',
     externalId: 'google_003', source: 'google', tag: 'personal', category: 'active_personal',
     title: null, startAt: new Date('2025-03-25T12:00:00'), endAt: new Date('2025-03-25T13:00:00'),
     durationMinutes: 60, attendeeCount: null, isRecurring: false, recurringGroupId: null,
-    baseStressPts: 4, contextSwitchPts: 6, totalStressPts: 10,
+    baseStressPts: 4, contextSwitchPts: 2, totalStressPts: 6,
     scoringDisabled: false, scoringDisabledScope: null, categoryOverriddenByUser: false,
     createdAt: new Date(), updatedAt: new Date(),
   },
