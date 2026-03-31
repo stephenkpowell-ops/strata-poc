@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { StrataProvider } from "@/lib/store";
+import NavBar from "@/components/NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,7 +31,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <StrataProvider>
-          {children}
+          {/* pb-16 ensures page content is never hidden behind the NavBar */}
+          <div className="flex flex-col flex-1 pb-16">
+            {children}
+          </div>
+          <NavBar />
         </StrataProvider>
       </body>
     </html>
