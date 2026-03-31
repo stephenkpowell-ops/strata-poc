@@ -26,7 +26,7 @@ const PHASES = [
   { label: 'Hold',    duration: 4, expand: true  },
   { label: 'Exhale',  duration: 4, expand: false },
   { label: 'Hold',    duration: 4, expand: false },
-] as const;
+];
 
 const TOTAL_ROUNDS = 4;
 
@@ -37,11 +37,11 @@ const TOTAL_ROUNDS = 4;
 export default function SessionPage() {
   const router = useRouter();
 
-  const [round,       setRound]       = useState(1);
-  const [phaseIndex,  setPhaseIndex]  = useState(0);
-  const [count,       setCount]       = useState(PHASES[0].duration);
-  const [started,     setStarted]     = useState(false);
-  const [completed,   setCompleted]   = useState(false);
+  const [round,      setRound]      = useState(1);
+  const [phaseIndex, setPhaseIndex] = useState(0);
+  const [count,      setCount]      = useState<number>(PHASES[0].duration);
+  const [started,    setStarted]    = useState(false);
+  const [completed,  setCompleted]  = useState(false);
 
   const phase = PHASES[phaseIndex];
 
