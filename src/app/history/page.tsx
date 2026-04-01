@@ -116,14 +116,18 @@ function LoadDriverRow({
   label,
   pts,
   maxPts,
+  fixedColor,
 }: {
-  label:  string;
-  pts:    number;
-  maxPts: number;
+  label:       string;
+  pts:         number;
+  maxPts:      number;
+  fixedColor?: 'indigo';
 }) {
   const pct      = maxPts > 0 ? pts / maxPts : 0;
-  const color    = pct >= 0.6 ? 'text-orange-400' : pct >= 0.3 ? 'text-indigo-400' : 'text-emerald-400';
-  const barColor = pct >= 0.6 ? 'bg-orange-400'  : pct >= 0.3 ? 'bg-indigo-400'  : 'bg-emerald-400';
+  const color    = fixedColor === 'indigo' ? 'text-indigo-400'
+    : pct >= 0.6 ? 'text-orange-400' : pct >= 0.3 ? 'text-indigo-400' : 'text-emerald-400';
+  const barColor = fixedColor === 'indigo' ? 'bg-indigo-400'
+    : pct >= 0.6 ? 'bg-orange-400'  : pct >= 0.3 ? 'bg-indigo-400'  : 'bg-emerald-400';
   const barWidth = `${Math.round(pct * 100)}%`;
 
   return (
@@ -161,13 +165,13 @@ function RecoveryDriverRow({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-sm text-zinc-300">{label}</span>
-        <span className="text-sm font-semibold tabular-nums text-indigo-400">
+        <span className="text-sm font-semibold tabular-nums text-emerald-400">
           {sessions === 0 ? '—' : `−${ptsReduced} pts`}
         </span>
       </div>
       <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
         {sessions > 0 && (
-          <div className="h-full rounded-full bg-indigo-400" style={{ width: barWidth }} />
+          <div className="h-full rounded-full bg-emerald-400" style={{ width: barWidth }} />
         )}
       </div>
       {sessions === 0 && (
@@ -199,9 +203,9 @@ function CumulativeDriversCard({
     + checkInValue;
 
   const loadDrivers = [
-    { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS     },
-    { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS },
-    { label: 'Check-in total',  pts: totalCheckIn            },
+    { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined         },
+    { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const },
+    { label: 'Check-in total',  pts: totalCheckIn,            fixedColor: undefined         },
   ];
 
   const maxLoadPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal);
@@ -222,6 +226,7 @@ function CumulativeDriversCard({
             label={driver.label}
             pts={driver.pts}
             maxPts={maxLoadPts}
+            fixedColor={driver.fixedColor}
           />
         ))}
 
