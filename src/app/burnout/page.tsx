@@ -65,10 +65,16 @@ function MetricCard({
 const BURNOUT_THRESHOLD = 70;
 
 export default function BurnoutPage() {
-  const { scores, completedSessions, dailyResult } = useStrata();
+  const { scores, completedSessions, checkInValue, dailyResult } = useStrata();
 
-  const latest      = scores[scores.length - 1];
-  const todayTotal  = latest?.totalScore ?? 0;
+  const latest              = scores[scores.length - 1];
+  const calendarPtsToday    = latest?.calendarPts ?? 0;
+  // Check-in contribution under the half-weight model
+  // calendarPts=0 → full check-in; calendarPts>0 → half check-in
+  const checkInContribution = calendarPtsToday === 0
+    ? checkInValue
+    : Math.round(checkInValue * 0.5);
+  const todayTotal          = Math.min(100, calendarPtsToday + checkInContribution);
   const last7       = scores.slice(-7);
   const last7Totals = last7.map(s => s.totalScore);
   const rollingAvg  = latest?.rollingAvg7d ?? 0;
@@ -77,9 +83,6 @@ export default function BurnoutPage() {
     scores.map(s => s.totalScore),
     BURNOUT_THRESHOLD
   );
-
-  // Today's calendar pts (March 25)
-  const calendarPtsToday = latest?.calendarPts ?? 0;
 
   // dailyResult is now scoped to today's events only (see store.tsx)
   // so topDrivers correctly reflects March 25 load breakdown
@@ -96,7 +99,7 @@ export default function BurnoutPage() {
     : 'Wednesday';
 
   // Load driver bar widths — max across all three drivers
-  const maxDriver = Math.max(workPts, personalPts, todayTotal, 1);
+  const maxDriver = Math.max(workPts, personalPts, checkInContribution, todayTotal, 1);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
@@ -201,6 +204,33 @@ export default function BurnoutPage() {
               </div>
             )}
 
+            {/* Check-in contribution */}
+            {checkInContribution > 0 && (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-300">
+                    Check-in
+                    <span className="text-zinc-600 text-xs ml-1.5">(×0.5 weight)</span>
+                  </span>
+                  <span className="text-sm font-semibold text-indigo-400">
+                    +{checkInContribution} pts
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-400 rounded-full"
+                    style={{ width: `${Math.round((checkInContribution / maxDriver) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+            {checkInContribution === 0 && (
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-600">Check-in</span>
+                <span className="text-xs text-zinc-600">— not logged</span>
+              </div>
+            )}
+
             {/* Total stress for today */}
             <div className="flex flex-col gap-1 pt-1 border-t border-zinc-800">
               <div className="flex items-center justify-between">
@@ -221,6 +251,9 @@ export default function BurnoutPage() {
                   style={{ width: `${Math.round((todayTotal / maxDriver) * 100)}%` }}
                 />
               </div>
+              <p className="text-[10px] text-zinc-600">
+                {workPts} work + {personalPts} personal + {checkInContribution} check-in = {todayTotal} pts
+              </p>
             </div>
 
           </div>
