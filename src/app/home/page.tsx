@@ -5,12 +5,9 @@
  *
  * Home screen.
  *
- * Sections (top to bottom):
- *   1. ScoreCard          — today's stress score with calendar + check-in breakdown
- *   2. CheckInCard        — daily self-reported stress level
- *   3. ForecastCard       — 5-day meeting forecast with opinionated insight
- *   4. BurnoutBanner      — fires when rollingAvg7d > 70, routes to /burnout
- *   5. TrialProgressBar   — days remaining in free trial
+ * Burnout banner fires when the PEAK rolling avg in the last 7 days
+ * exceeds 70 — not just today's rolling avg. This ensures the banner
+ * stays visible during the recovery period after a high-load week.
  */
 
 import Link from 'next/link';
@@ -20,11 +17,17 @@ import CheckInCard from '@/components/CheckInCard';
 import ForecastCard from '@/components/ForecastCard';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HELPERS
+// CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
+
+const BURNOUT_THRESHOLD = 70;
 
 // POC anchor date — avoids Date.now() hydration mismatches
 const POC_NOW = new Date('2025-03-25T12:00:00').getTime();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// HELPERS
+// ─────────────────────────────────────────────────────────────────────────────
 
 function daysRemaining(trialEndsAt: Date | null): number {
   if (!trialEndsAt) return 0;
@@ -81,31 +84,58 @@ function TrialProgressBar({
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BURNOUT ALERT BANNER
+// Fires when the PEAK rolling avg in the last 7 scores exceeds threshold.
+// This keeps the banner visible during recovery after a high-load week.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
-  if (rollingAvg <= 70) return null;
+function BurnoutAlertBanner({
+  peakRollingAvg,
+  currentRollingAvg,
+}: {
+  peakRollingAvg:    number;
+  currentRollingAvg: number;
+}) {
+  if (peakRollingAvg <= BURNOUT_THRESHOLD) return null;
+
+  const isRecovering = currentRollingAvg <= BURNOUT_THRESHOLD;
 
   return (
     <Link
       href="/burnout"
-      className="flex items-start gap-3 bg-amber-950 border border-amber-800 rounded-2xl p-4 hover:bg-amber-900 transition-colors"
+      className={`flex items-start gap-3 border rounded-2xl p-4 transition-colors ${
+        isRecovering
+          ? 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800'
+          : 'bg-amber-950 border-amber-800 hover:bg-amber-900'
+      }`}
     >
       <div className="relative flex-shrink-0 mt-0.5">
         <span className="flex h-2.5 w-2.5">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
+            isRecovering ? 'bg-zinc-400' : 'bg-amber-400'
+          }`} />
+          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
+            isRecovering ? 'bg-zinc-400' : 'bg-amber-400'
+          }`} />
         </span>
       </div>
       <div className="flex flex-col gap-1 flex-1">
-        <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
-          Performance Degradation Alert
+        <span className={`text-xs font-semibold uppercase tracking-wider ${
+          isRecovering ? 'text-zinc-400' : 'text-amber-400'
+        }`}>
+          {isRecovering ? 'Recovery In Progress' : 'Performance Degradation Alert'}
         </span>
-        <span className="text-sm text-amber-200 leading-snug">
-          Your recovery rate hasn&#39;t kept up with load. The window to correct it is now.
+        <span className={`text-sm leading-snug ${
+          isRecovering ? 'text-zinc-300' : 'text-amber-200'
+        }`}>
+          {isRecovering
+            ? 'Your rolling average is recovering. Keep the recovery sessions going.'
+            : "Your recovery rate hasn\u2019t kept up with load. The window to correct it is now."
+          }
         </span>
-        <span className="text-xs text-amber-600 mt-0.5">
-          7-day avg {rollingAvg} · threshold 70 · Tap to see your recovery plan →
+        <span className={`text-xs mt-0.5 ${
+          isRecovering ? 'text-zinc-600' : 'text-amber-600'
+        }`}>
+          Peak 7-day avg {peakRollingAvg} · current {currentRollingAvg} · threshold {BURNOUT_THRESHOLD} · Tap for details →
         </span>
       </div>
     </Link>
@@ -130,10 +160,13 @@ export default function HomePage() {
     );
   }
 
+  // Peak rolling avg across last 7 score records
+  const peakRollingAvg    = Math.max(...scores.slice(-7).map(s => s.rollingAvg7d));
+  const currentRollingAvg = latest.rollingAvg7d;
+
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
-      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex flex-col">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -147,7 +180,6 @@ export default function HomePage() {
 
       <div className="flex flex-col gap-4 px-6 pb-8">
 
-        {/* 1. Score card — today */}
         <ScoreCard
           currentScore={latest.totalScore}
           calendarPts={latest.calendarPts}
@@ -156,19 +188,18 @@ export default function HomePage() {
           recentScores={last7}
         />
 
-        {/* 2. Daily check-in — today */}
         <CheckInCard
           currentValue={checkInValue}
           onSelect={setCheckIn}
         />
 
-        {/* 3. 5-day meeting forecast */}
         <ForecastCard forecastScores={forecastScores} />
 
-        {/* 4. Burnout alert banner */}
-        <BurnoutAlertBanner rollingAvg={latest.rollingAvg7d} />
+        <BurnoutAlertBanner
+          peakRollingAvg={peakRollingAvg}
+          currentRollingAvg={currentRollingAvg}
+        />
 
-        {/* 5. Trial progress bar */}
         <TrialProgressBar
           trialStartedAt={user.trialStartedAt}
           trialEndsAt={user.trialEndsAt}

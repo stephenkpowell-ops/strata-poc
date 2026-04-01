@@ -5,14 +5,13 @@
  *
  * History & Trends screen.
  *
- * Shows:
- *   - 9-day summary card (avg score, peak day, lowest day, mini sparkline)
- *   - Cumulative load drivers across all 9 days:
- *       Work meetings    — 286 pts (pre-computed from StressEngine)
- *       Active personal  —  49 pts (pre-computed from StressEngine)
- *       Check-in total   — sum of fixture check-ins + live today check-in
- *       Recovery         — −6 pts per completed session (live from store)
- *   - Score history list (most recent first, color-coded)
+ * Cumulative Load Drivers shows calendar-based drivers only:
+ *   Work meetings   — 286 pts (pre-computed)
+ *   Active personal —  49 pts (pre-computed)
+ *   Recovery        — live from store (emerald, reduction)
+ *
+ * Check-in is shown only on the daily burnout screen where it has
+ * direct context alongside today's calendar load.
  */
 
 import { useStrata } from '@/lib/store';
@@ -109,7 +108,7 @@ function SummaryCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DRIVER ROW — load (positive pts, orange/indigo/emerald bars)
+// DRIVER ROW
 // ─────────────────────────────────────────────────────────────────────────────
 
 function LoadDriverRow({
@@ -143,11 +142,7 @@ function LoadDriverRow({
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// RECOVERY ROW — reduction (negative pts, always emerald)
-// ─────────────────────────────────────────────────────────────────────────────
-
-function RecoveryDriverRow({
+function RecoveryRow({
   sessions,
   ptsReduced,
   maxPts,
@@ -188,27 +183,18 @@ function RecoveryDriverRow({
 // ─────────────────────────────────────────────────────────────────────────────
 
 function CumulativeDriversCard({
-  scores,
-  checkInValue,
   completedSessions,
   recoveryPtsTotal,
 }: {
-  scores:            { checkInValue: number }[];
-  checkInValue:      number;
   completedSessions: number;
   recoveryPtsTotal:  number;
 }) {
-  // Cumulative check-in: fixture values for days 0–7 + live value for today
-  const totalCheckIn = scores.slice(0, -1).reduce((sum, s) => sum + s.checkInValue, 0)
-    + checkInValue;
-
   const loadDrivers = [
     { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined         },
     { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const },
-    { label: 'Check-in total',  pts: totalCheckIn,            fixedColor: undefined         },
   ];
 
-  const maxLoadPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal);
+  const maxPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal);
 
   return (
     <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-5">
@@ -216,7 +202,7 @@ function CumulativeDriversCard({
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Cumulative load drivers
         </span>
-        <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · total pts contributed</span>
+        <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · calendar pts only</span>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -225,18 +211,17 @@ function CumulativeDriversCard({
             key={i}
             label={driver.label}
             pts={driver.pts}
-            maxPts={maxLoadPts}
+            maxPts={maxPts}
             fixedColor={driver.fixedColor}
           />
         ))}
 
-        {/* Divider before recovery row */}
         <div className="border-t border-zinc-800 pt-1" />
 
-        <RecoveryDriverRow
+        <RecoveryRow
           sessions={completedSessions}
           ptsReduced={recoveryPtsTotal}
-          maxPts={maxLoadPts}
+          maxPts={maxPts}
         />
       </div>
     </div>
@@ -323,8 +308,6 @@ export default function HistoryPage() {
         <SummaryCard scores={scores} />
 
         <CumulativeDriversCard
-          scores={scores}
-          checkInValue={checkInValue}
           completedSessions={completedSessions}
           recoveryPtsTotal={recoveryPtsTotal}
         />
@@ -337,7 +320,7 @@ export default function HistoryPage() {
             const isLatest       = i === 0;
             const displayCheckIn = isLatest ? checkInValue : score.checkInValue;
             const displayTotal   = isLatest
-              ? Math.min(100, checkInValue + score.calendarPts)
+              ? Math.min(100, score.calendarPts + Math.round(checkInValue * 0.5))
               : score.totalScore;
 
             return (
