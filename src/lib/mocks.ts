@@ -175,6 +175,68 @@ export const FIXTURE_EVENTS: CalendarEvent[] = [
   personalEvent('evt_003', 'google_003', 'Doctor appointment', 'active_personal',    '2025-03-25T12:00:00', '2025-03-25T13:00:00'),
 ];
 
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FIXTURE FORECAST
+// Pre-computed calendar stress for the next 5 days (March 26–30).
+// calendarPts derived from StressEngine output for each day's planned events.
+// No check-in value — forecast is calendar-load only.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface ForecastDay {
+  date:        Date;
+  calendarPts: number;
+  events: {
+    title:    string;
+    category: string;
+    start:    string;
+    end:      string;
+  }[];
+}
+
+export const FIXTURE_FORECAST: ForecastDay[] = [
+  {
+    date:        new Date('2025-03-26T12:00:00'),
+    calendarPts: 24,
+    events: [
+      { title: 'Morning Standup',    category: 'work',            start: '09:00', end: '09:30' },
+      { title: 'Gym',                category: 'active_personal', start: '12:00', end: '13:00' },
+      { title: '1:1 with PM',        category: 'work',            start: '14:00', end: '14:30' },
+    ],
+  },
+  {
+    date:        new Date('2025-03-27T12:00:00'),
+    calendarPts: 59,
+    events: [
+      { title: 'Roadmap Sync',       category: 'work',            start: '09:00', end: '10:00' },
+      { title: 'Exec Sync',          category: 'work',            start: '10:00', end: '11:00' },
+      { title: 'Product Review',     category: 'work',            start: '11:00', end: '12:00' },
+      { title: 'Lunch errand',       category: 'logistical',      start: '12:30', end: '13:00' },
+      { title: 'Customer Call',      category: 'work',            start: '14:00', end: '15:00' },
+      { title: 'Late Planning',      category: 'work',            start: '16:30', end: '17:30' },
+    ],
+  },
+  {
+    date:        new Date('2025-03-28T12:00:00'),
+    calendarPts: 22,
+    events: [
+      { title: 'Weekly Metrics',     category: 'work',            start: '09:30', end: '10:00' },
+      { title: '1:1 with PM',        category: 'work',            start: '10:30', end: '11:00' },
+      { title: 'Family dinner',      category: 'active_personal', start: '18:30', end: '20:00' },
+    ],
+  },
+  {
+    date:        new Date('2025-03-29T12:00:00'),
+    calendarPts: 0,
+    events: [],
+  },
+  {
+    date:        new Date('2025-03-30T12:00:00'),
+    calendarPts: 0,
+    events: [],
+  },
+];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MOCK REPOSITORIES
 // ─────────────────────────────────────────────────────────────────────────────

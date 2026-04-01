@@ -3,20 +3,21 @@
 /**
  * src/app/home/page.tsx
  *
- * Home screen — hero stress score, check-in, burnout alert, trial bar.
+ * Home screen.
  *
- * Current state:
- *   - ScoreCard shows total score with Calendar + Check-in breakdown
- *   - CheckInCard allows user to update their self-reported stress level
- *   - Burnout alert banner fires when rollingAvg > 70
- *   - Trial progress bar shows days remaining
- *   - Navigation tab bar in layout.tsx
+ * Sections (top to bottom):
+ *   1. ScoreCard       — today's stress score with calendar + check-in breakdown
+ *   2. CheckInCard     — daily self-reported stress level
+ *   3. ForecastCard    — 5-day predictive calendar load with opinionated insight
+ *   4. BurnoutBanner   — fires when rollingAvg7d > 70, routes to /burnout
+ *   5. TrialProgressBar — days remaining in free trial
  */
 
 import Link from 'next/link';
 import { useStrata } from '@/lib/store';
 import ScoreCard from '@/components/ScoreCard';
 import CheckInCard from '@/components/CheckInCard';
+import ForecastCard from '@/components/ForecastCard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -113,7 +114,7 @@ function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { scores, user, checkInValue, setCheckIn } = useStrata();
+  const { scores, user, checkInValue, setCheckIn, forecast } = useStrata();
 
   const latest = scores[scores.length - 1];
   const last7  = scores.slice(-7).map(s => s.totalScore);
@@ -129,7 +130,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
-      {/* Page header */}
+      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex flex-col">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -143,7 +144,7 @@ export default function HomePage() {
 
       <div className="flex flex-col gap-4 px-6 pb-8">
 
-        {/* Score card — shows Calendar + Check-in = Total breakdown */}
+        {/* 1. Score card */}
         <ScoreCard
           currentScore={latest.totalScore}
           calendarPts={latest.calendarPts}
@@ -152,16 +153,19 @@ export default function HomePage() {
           recentScores={last7}
         />
 
-        {/* Daily check-in — updating this recalculates totalScore live */}
+        {/* 2. Daily check-in */}
         <CheckInCard
           currentValue={checkInValue}
           onSelect={setCheckIn}
         />
 
-        {/* Burnout alert banner */}
+        {/* 3. 5-day forecast */}
+        <ForecastCard forecast={forecast} />
+
+        {/* 4. Burnout alert banner */}
         <BurnoutAlertBanner rollingAvg={latest.rollingAvg7d} />
 
-        {/* Trial progress bar */}
+        {/* 5. Trial progress bar */}
         <TrialProgressBar
           trialStartedAt={user.trialStartedAt}
           trialEndsAt={user.trialEndsAt}
