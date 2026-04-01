@@ -22,7 +22,10 @@ import Sparkline from '@/components/Sparkline';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CUMULATIVE_WORK_PTS     = 286;
-const CUMULATIVE_PERSONAL_PTS = 58;  // updated: includes Mar 22 personal events (+9 pts)
+const CUMULATIVE_PERSONAL_PTS = 58;   // updated: includes Mar 22 personal events (+9 pts)
+// Check-in contribution = actual pts added per day under half-weight model
+// Work days: round(checkIn × 0.5), Rest days: full checkIn value
+const CUMULATIVE_CHECK_IN_PTS = 227;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -120,12 +123,14 @@ function LoadDriverRow({
   label:       string;
   pts:         number;
   maxPts:      number;
-  fixedColor?: 'indigo';
+  fixedColor?: 'indigo' | 'zinc';
 }) {
   const pct      = maxPts > 0 ? pts / maxPts : 0;
   const color    = fixedColor === 'indigo' ? 'text-indigo-400'
+    : fixedColor === 'zinc'   ? 'text-zinc-400'
     : pct >= 0.6 ? 'text-orange-400' : pct >= 0.3 ? 'text-indigo-400' : 'text-emerald-400';
   const barColor = fixedColor === 'indigo' ? 'bg-indigo-400'
+    : fixedColor === 'zinc'   ? 'bg-zinc-500'
     : pct >= 0.6 ? 'bg-orange-400'  : pct >= 0.3 ? 'bg-indigo-400'  : 'bg-emerald-400';
   const barWidth = `${Math.round(pct * 100)}%`;
 
@@ -192,8 +197,9 @@ function CumulativeDriversCard({
   cumulativeTotalStress: number;
 }) {
   const loadDrivers = [
-    { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined         },
-    { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const },
+    { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined          },
+    { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const  },
+    { label: 'Check-in',        pts: CUMULATIVE_CHECK_IN_PTS, fixedColor: 'zinc'   as const  },
   ];
 
   const maxPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal, cumulativeTotalStress);
@@ -204,7 +210,7 @@ function CumulativeDriversCard({
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
           Cumulative load drivers
         </span>
-        <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · calendar pts only</span>
+        <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · actual pts contributed</span>
       </div>
 
       <div className="flex flex-col gap-3">
