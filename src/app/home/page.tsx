@@ -15,12 +15,16 @@ import { useStrata } from '@/lib/store';
 import ScoreCard from '@/components/ScoreCard';
 import CheckInCard from '@/components/CheckInCard';
 import ForecastCard from '@/components/ForecastCard';
+import type { PredictionInput } from '@/lib/predictCheckIn';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONSTANTS
 // ─────────────────────────────────────────────────────────────────────────────
 
 const BURNOUT_THRESHOLD = 70;
+
+// POC today = Tuesday March 25, 2025 (day of week = 2)
+const POC_DAY_OF_WEEK = 2;
 
 // POC anchor date — avoids Date.now() hydration mismatches
 const POC_NOW = new Date('2025-03-25T12:00:00').getTime();
@@ -173,7 +177,7 @@ function PerformanceStatusCard({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { scores, user, checkInValue, setCheckIn, forecastScores } = useStrata();
+  const { scores, user, checkInValue, setCheckIn, forecastScores, completedSessions } = useStrata();
 
   const latest = scores[scores.length - 1];
   const last7  = scores.slice(-7).map(s => s.totalScore);
@@ -189,6 +193,25 @@ export default function HomePage() {
   // Peak rolling avg across last 7 score records
   const peakRollingAvg    = Math.max(...scores.slice(-7).map(s => s.rollingAvg7d));
   const currentRollingAvg = latest.rollingAvg7d;
+
+  // Consecutive high days — count backwards from most recent
+  const consecutiveHighDays = (() => {
+    let count = 0;
+    for (let i = scores.length - 1; i >= 0; i--) {
+      if (scores[i].totalScore > 70) count++;
+      else break;
+    }
+    return count;
+  })();
+
+  // Prediction inputs for CheckInCard
+  const predictionInput: PredictionInput = {
+    calendarPts:         latest.calendarPts,
+    dayOfWeek:           POC_DAY_OF_WEEK,
+    rollingAvg7d:        currentRollingAvg,
+    completedSessions,
+    consecutiveHighDays,
+  };
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
@@ -217,6 +240,7 @@ export default function HomePage() {
         <CheckInCard
           currentValue={checkInValue}
           onSelect={setCheckIn}
+          predictionInput={predictionInput}
         />
 
         <ForecastCard forecastScores={forecastScores} />
