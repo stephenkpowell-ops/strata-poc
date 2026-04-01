@@ -49,6 +49,17 @@ interface Props {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
+function getCheckInLabel(value: number): string {
+  switch (value) {
+    case 0:   return 'Zero';
+    case 25:  return 'Low';
+    case 50:  return 'Moderate';
+    case 75:  return 'High';
+    case 100: return 'Critical';
+    default:  return `${value}`;
+  }
+}
+
 function getScoreColor(score: number, capped: boolean): string {
   if (capped)       return 'text-red-500';
   if (score >= 75)  return 'text-orange-400';
@@ -88,7 +99,8 @@ export default function ScoreCard({
   recentScores,
 }: Props) {
   // Cap detection — true when the raw sum exceeds 100
-  const isCapped    = checkInValue + calendarPts > 100;
+  // Score is at maximum — show critical indicator
+  const isCapped = currentScore >= 100 && checkInValue >= 75;
 
   const scoreColor  = getScoreColor(currentScore, isCapped);
   const statusLabel = getStatusLabel(currentScore, isCapped);
@@ -138,7 +150,7 @@ export default function ScoreCard({
         <div className="flex flex-col items-center flex-1">
           <span className="text-xs text-zinc-500">Check-in</span>
           <span className="text-base font-bold text-indigo-400 tabular-nums">
-            {checkInValue}
+            {getCheckInLabel(checkInValue)}
           </span>
         </div>
 
@@ -159,7 +171,7 @@ export default function ScoreCard({
       {/* Capped notice */}
       {isCapped && (
         <p className="text-xs text-red-500 text-center -mt-1">
-          Raw score {checkInValue + calendarPts} — capped at 100
+          Critical load — score capped at 100
         </p>
       )}
 

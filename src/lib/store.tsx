@@ -80,22 +80,24 @@ export function StrataProvider({ children }: { children: ReactNode }) {
   const historicalFixture = FIXTURE_SCORES.slice(0, HISTORY_COUNT);
   const forecastFixture   = FIXTURE_SCORES.slice(HISTORY_COUNT);
 
-  const scores: StressScore[] = historicalFixture.map((s, i) => {
-    if (i !== historicalFixture.length - 1) return s;
-    return {
-      ...s,
-      checkInValue,
-      totalScore: Math.min(100, checkInValue + s.calendarPts),
-    };
-  });
-
-  // Score only today's events so topDrivers and scoredEvents reflect March 25
+  // Score only today's events — dailyResult.totalScore uses the
+  // Option A multiplier model from StressEngine
   const dailyResult: DailyScoreResult = computeDailyScore({
     events:        TODAY_EVENTS,
     calendarPrefs: [
       { includeInScoring: true, contextSwitchPenalties: true, recoveryEventsReduce: true },
     ],
     checkInValue,
+  });
+
+  // Update today's score record with live check-in and multiplier-based totalScore
+  const scores: StressScore[] = historicalFixture.map((s, i) => {
+    if (i !== historicalFixture.length - 1) return s;
+    return {
+      ...s,
+      checkInValue,
+      totalScore: dailyResult.totalScore,
+    };
   });
 
   const setCheckIn         = (value: number) => setCheckInValue(value);

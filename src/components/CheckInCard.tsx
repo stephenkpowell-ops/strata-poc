@@ -107,7 +107,7 @@ export default function CheckInCard({ currentValue, onSelect }: Props) {
 
       {/* Score contribution note */}
       <p className="text-[10px] text-zinc-600 text-center">
-        Check-in contributes {currentValue} pts to your stress load score
+        Check-in: {selected ? selected.label : 'not logged'} · amplifies calendar load{currentValue === 0 ? ' (reduced)' : currentValue <= 50 ? '' : ' (amplified)'}
       </p>
 
     </div>

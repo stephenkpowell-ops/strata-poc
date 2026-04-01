@@ -252,3 +252,60 @@ describe('computeRollingAvg', () => {
     expect(computeRollingAvg(scores, 7)).toBe(100);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// OPTION A MULTIPLIER MODEL
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe('Option A check-in multiplier model', () => {
+  const events = [
+    makeEvent({ id: 'w1', tag: 'work', category: 'work',
+      startAt: new Date('2025-03-25T09:00:00'), endAt: new Date('2025-03-25T10:00:00') }),
+  ];
+
+  it('applies 1.0 multiplier for Moderate check-in (neutral)', () => {
+    const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 50 });
+    // calendarPts = 8, multiplier = 1.0, totalScore = 8
+    expect(result.totalScore).toBe(8);
+  });
+
+  it('applies 0.85 multiplier for Low check-in', () => {
+    const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 25 });
+    // calendarPts = 8, multiplier = 0.85, totalScore = round(8 * 0.85) = 7
+    expect(result.totalScore).toBe(7);
+  });
+
+  it('applies 1.25 multiplier for High check-in', () => {
+    const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 75 });
+    // calendarPts = 8, multiplier = 1.25, totalScore = round(8 * 1.25) = 10
+    expect(result.totalScore).toBe(10);
+  });
+
+  it('applies 0.7 multiplier for Zero check-in', () => {
+    const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 0 });
+    // calendarPts = 8, multiplier = 0.7, totalScore = round(8 * 0.7) = 6
+    expect(result.totalScore).toBe(6);
+  });
+
+  it('uses half-weight floor on rest days (calendarPts = 0)', () => {
+    const result = computeDailyScore({ events: [], calendarPrefs: defaultPrefs, checkInValue: 100 });
+    // calendarPts = 0, totalScore = round(100 * 0.5) = 50
+    expect(result.totalScore).toBe(50);
+  });
+
+  it('returns 0 totalScore for Zero check-in on a rest day', () => {
+    const result = computeDailyScore({ events: [], calendarPrefs: defaultPrefs, checkInValue: 0 });
+    expect(result.totalScore).toBe(0);
+  });
+
+  it('caps totalScore at 100', () => {
+    // High-load day (90 cal pts) with Critical check-in (×1.5 = 135 → capped)
+    const heavyEvents = Array.from({ length: 6 }, (_, i) =>
+      makeEvent({ id: `w${i}`, tag: 'work', category: 'work',
+        startAt: new Date(`2025-03-25T0${9+i}:00:00`),
+        endAt:   new Date(`2025-03-25T0${9+i}:30:00`) })
+    );
+    const result = computeDailyScore({ events: heavyEvents, calendarPrefs: defaultPrefs, checkInValue: 100 });
+    expect(result.totalScore).toBeLessThanOrEqual(100);
+  });
+});

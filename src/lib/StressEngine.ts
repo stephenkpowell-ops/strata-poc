@@ -68,8 +68,24 @@ export interface ScoredEvent {
   };
 }
 
+// Check-in multipliers for Option A scoring model.
+// The check-in amplifies or dampens the calendar score rather than
+// adding to it directly. On rest days (calendarPts = 0) a half-weight
+// floor ensures the check-in still registers.
+export const CHECK_IN_MULTIPLIERS: Record<number, number> = {
+  0:   0.7,   // Zero     — recovery state, calendar load reduced
+  25:  0.85,  // Low      — slightly below neutral
+  50:  1.0,   // Moderate — neutral, calendar score unchanged
+  75:  1.25,  // High     — amplified
+  100: 1.5,   // Critical — strongly amplified
+};
+
+// Half-weight scaling for rest days (calendarPts = 0)
+const REST_DAY_SCALE = 0.5;
+
 export interface DailyScoreResult {
-  calendarPts: number;          // total from all events
+  calendarPts:  number;          // total from all events (pre-multiplier)
+  totalScore:   number;          // calendarPts × multiplier (or checkIn × 0.5 on rest days)
   scoredEvents: ScoredEvent[];
   topDrivers: {
     category: string;
@@ -316,8 +332,16 @@ export function computeDailyScore(input: ScoreComputationInput): DailyScoreResul
     .sort((a, b) => b[1] - a[1])
     .map(([category, totalPts]) => ({ category, totalPts }));
 
+  // Compute totalScore using Option A multiplier model
+  const cappedCalendarPts = Math.min(calendarPts, maxScore);
+  const multiplier = CHECK_IN_MULTIPLIERS[input.checkInValue] ?? 1.0;
+  const totalScore = cappedCalendarPts === 0
+    ? Math.round(input.checkInValue * REST_DAY_SCALE)
+    : Math.min(maxScore, Math.round(cappedCalendarPts * multiplier));
+
   return {
-    calendarPts: Math.min(calendarPts, maxScore),
+    calendarPts:  cappedCalendarPts,
+    totalScore,
     scoredEvents: allScored,
     topDrivers,
   };

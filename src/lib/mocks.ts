@@ -63,15 +63,15 @@ export const FIXTURE_USER: User = {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const FIXTURE_SCORES: StressScore[] = [
-  { id: 'score_0', userId: FIXTURE_USER.id, date: new Date('2025-03-17T12:00:00'), checkInValue: 25, calendarPts: 46, totalScore: 71,  rollingAvg7d: 71, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_1', userId: FIXTURE_USER.id, date: new Date('2025-03-18T12:00:00'), checkInValue: 50, calendarPts: 50, totalScore: 100, rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 25, calendarPts: 90, totalScore: 100, rollingAvg7d: 90, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 50, calendarPts: 64, totalScore: 100, rollingAvg7d: 93, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 25, calendarPts: 33, totalScore: 58,  rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 50, calendarPts: 9,  totalScore: 59,  rollingAvg7d: 81, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 0,  totalScore: 25,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 50, calendarPts: 22, totalScore: 72,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 50, calendarPts: 30, totalScore: 80,  rollingAvg7d: 71, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_0', userId: FIXTURE_USER.id, date: new Date('2025-03-17T12:00:00'), checkInValue: 50, calendarPts: 46, totalScore: 46,  rollingAvg7d: 46, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_1', userId: FIXTURE_USER.id, date: new Date('2025-03-18T12:00:00'), checkInValue: 75, calendarPts: 50, totalScore: 63,  rollingAvg7d: 55, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 75, calendarPts: 90, totalScore: 100, rollingAvg7d: 70, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 75, calendarPts: 64, totalScore: 80,  rollingAvg7d: 72, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 50, calendarPts: 33, totalScore: 33,  rollingAvg7d: 64, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 25, calendarPts: 9,  totalScore: 8,   rollingAvg7d: 55, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 0,  totalScore: 13,  rollingAvg7d: 49, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 50, calendarPts: 22, totalScore: 22,  rollingAvg7d: 46, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 0,  calendarPts: 30, totalScore: 21,  rollingAvg7d: 40, createdAt: new Date(), updatedAt: new Date() },
   // Forecast days — checkInValue: 0 (future, no check-in logged yet)
   { id: 'score_9',  userId: FIXTURE_USER.id, date: new Date('2025-03-26T12:00:00'), checkInValue: 0,  calendarPts: 24, totalScore: 24,  rollingAvg7d: 60, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_10', userId: FIXTURE_USER.id, date: new Date('2025-03-27T12:00:00'), checkInValue: 0,  calendarPts: 59, totalScore: 59,  rollingAvg7d: 54, createdAt: new Date(), updatedAt: new Date() },
