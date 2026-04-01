@@ -25,8 +25,8 @@
  *   In container.ts, check the env flag and return mock implementations.
  */
 
-import type { IRepositories } from './interfaces/repositories';
-import type { IAdapters }     from './interfaces/adapters';
+import type { IRepositories } from './repositories';
+import type { IAdapters }     from './adapters';
 import type {
   User, ConnectedCalendar, CalendarEvent, StressScore, ScoreHistory,
   RecoverySession, Cohort, CohortMember, WeeklyPrompt, PromptResponse,
