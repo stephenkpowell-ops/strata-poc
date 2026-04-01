@@ -22,7 +22,7 @@ import Sparkline from '@/components/Sparkline';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CUMULATIVE_WORK_PTS     = 286;
-const CUMULATIVE_PERSONAL_PTS = 49;
+const CUMULATIVE_PERSONAL_PTS = 58;  // updated: includes Mar 22 personal events (+9 pts)
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
