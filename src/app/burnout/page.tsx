@@ -5,18 +5,10 @@
  *
  * Burnout Alert Screen — steps 19, 20, 21, 22.
  *
- * Entry points:
- *   - Tapping the amber banner on the home screen
- *   - Tapping the secondary banner on the calendar screen (step 13, future)
- *   - Push notification (MVP — not POC)
- *
- * Screen sections:
- *   Step 19 — Obsidian hero with eyebrow, headline, sub-copy
- *   Step 20 — Three metric cards: 7-day avg, consecutive high days, sessions
- *   Step 21 — 7-day trend sparkline with threshold line
- *   Step 22 — "Start Recovery Session →" CTA routing to /recovery
- *
- * All data comes from the Strata store (fixture data for POC).
+ * Updates:
+ *   - "Sessions this week" reads from store.completedSessions (live)
+ *   - "TOP LOAD DRIVERS" renamed to "TODAY'S LOAD DRIVERS"
+ *   - Check-in row added to load drivers showing today's check-in value
  */
 
 import Link from 'next/link';
@@ -27,17 +19,24 @@ import Sparkline from '@/components/Sparkline';
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** Count how many of the most recent scores exceed the threshold consecutively */
 function countConsecutiveHighDays(scores: number[], threshold: number): number {
   let count = 0;
   for (let i = scores.length - 1; i >= 0; i--) {
-    if (scores[i] >= threshold) {
-      count++;
-    } else {
-      break;
-    }
+    if (scores[i] >= threshold) count++;
+    else break;
   }
   return count;
+}
+
+function getCheckInLabel(value: number): string {
+  switch (value) {
+    case 0:   return 'Zero';
+    case 25:  return 'Low';
+    case 50:  return 'Moderate';
+    case 75:  return 'High';
+    case 100: return 'Critical';
+    default:  return `${value}`;
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -79,63 +78,57 @@ function MetricCard({
 const BURNOUT_THRESHOLD = 70;
 
 export default function BurnoutPage() {
-  const { scores } = useStrata();
+  const { scores, completedSessions, checkInValue } = useStrata();
 
-  const latest        = scores[scores.length - 1];
-  const last7         = scores.slice(-7);
-  const last7Totals   = last7.map(s => s.totalScore);
-  const rollingAvg    = latest?.rollingAvg7d ?? 0;
+  const latest      = scores[scores.length - 1];
+  const last7       = scores.slice(-7);
+  const last7Totals = last7.map(s => s.totalScore);
+  const rollingAvg  = latest?.rollingAvg7d ?? 0;
+
   const consecutiveDays = countConsecutiveHighDays(
     scores.map(s => s.totalScore),
     BURNOUT_THRESHOLD
   );
 
-  // Recovery sessions this week — fixture data has none logged yet
-  // Will be populated from store once recovery sessions are tracked in step 23
-  const sessionsThisWeek = 0;
+  // Today's calendar pts (March 25)
+  const calendarPtsToday = latest?.calendarPts ?? 0;
 
-  // Insight line below the sparkline
+  // Peak day label for sparkline insight
   const peakScore = Math.max(...last7Totals);
   const peakDay   = last7[last7Totals.indexOf(peakScore)];
   const peakDate  = peakDay
     ? new Date(peakDay.date).toLocaleDateString('en-US', { weekday: 'long' })
-    : 'Tuesday';
+    : 'Wednesday';
+
+  // Load driver bar widths — max across all three drivers
+  const maxDriver = Math.max(calendarPtsToday, checkInValue, 1);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
-      {/* ── Step 19 — Hero section ─────────────────────────────────────── */}
+      {/* ── Hero section ──────────────────────────────────────────────────── */}
       <div className="flex flex-col gap-3 bg-zinc-950 px-6 pt-12 pb-6 border-b border-zinc-800">
-
-        {/* Back link */}
         <Link
           href="/home"
           className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors w-fit"
         >
           ← Dashboard
         </Link>
-
-        {/* Eyebrow */}
         <span className="text-xs font-semibold uppercase tracking-widest text-amber-400">
           Performance Degradation Alert
         </span>
-
-        {/* Headline */}
         <h1 className="text-xl font-bold text-white leading-snug">
           Your recovery rate hasn&#39;t kept up with load for {consecutiveDays} {consecutiveDays === 1 ? 'day' : 'days'}.
         </h1>
-
-        {/* Sub-copy */}
         <p className="text-sm text-zinc-400 leading-relaxed">
           This is the pattern that precedes burnout. It doesn&#39;t mean you&#39;re
           there — it means the window to correct it is now.
         </p>
-
       </div>
 
       <div className="flex flex-col gap-4 px-6 py-6">
 
-        {/* ── Step 20 — Three metric cards ───────────────────────────────── */}
+        {/* ── Three metric cards ────────────────────────────────────────────── */}
         <div className="grid grid-cols-3 gap-3">
           <MetricCard
             label="7-day avg"
@@ -151,12 +144,12 @@ export default function BurnoutPage() {
           />
           <MetricCard
             label="Sessions"
-            value={String(sessionsThisWeek)}
+            value={String(completedSessions)}
             sub="this week"
           />
         </div>
 
-        {/* ── Step 21 — Trend sparkline ───────────────────────────────────── */}
+        {/* ── Trend sparkline ───────────────────────────────────────────────── */}
         <div className="flex flex-col gap-2 bg-zinc-900 rounded-2xl p-4">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
@@ -172,30 +165,61 @@ export default function BurnoutPage() {
           </p>
         </div>
 
-        {/* Top load drivers */}
+        {/* ── Today's load drivers ──────────────────────────────────────────── */}
         <div className="flex flex-col gap-2 bg-zinc-900 rounded-2xl p-4">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Top load drivers
+            Today&#39;s Load Drivers
           </span>
-          <div className="flex flex-col gap-2 pt-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-300">Work meetings</span>
-              <span className="text-sm font-semibold text-orange-400">+22 pts</span>
+          <div className="flex flex-col gap-3 pt-1">
+
+            {/* Work meetings */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-300">Work meetings</span>
+                <span className="text-sm font-semibold text-orange-400">
+                  +{calendarPtsToday} pts
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-orange-400 rounded-full"
+                  style={{ width: `${Math.round((calendarPtsToday / maxDriver) * 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-orange-400 rounded-full" style={{ width: '79%' }} />
+
+            {/* Check-in */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-300">
+                  Check-in
+                  <span className="text-zinc-600 text-xs ml-1.5">
+                    ({getCheckInLabel(checkInValue)})
+                  </span>
+                </span>
+                <span className={`text-sm font-semibold ${
+                  checkInValue === 0 ? 'text-zinc-600' : 'text-indigo-400'
+                }`}>
+                  {checkInValue === 0 ? '—' : `+${checkInValue} pts`}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-indigo-400 rounded-full"
+                  style={{ width: `${Math.round((checkInValue / maxDriver) * 100)}%` }}
+                />
+              </div>
+              {checkInValue === 0 && (
+                <span className="text-[10px] text-zinc-600">
+                  Log your check-in on the dashboard
+                </span>
+              )}
             </div>
-            <div className="flex items-center justify-between mt-1">
-              <span className="text-sm text-zinc-300">Personal overlap</span>
-              <span className="text-sm font-semibold text-indigo-400">+6 pts</span>
-            </div>
-            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div className="h-full bg-indigo-400 rounded-full" style={{ width: '21%' }} />
-            </div>
+
           </div>
         </div>
 
-        {/* ── Step 22 — CTA ───────────────────────────────────────────────── */}
+        {/* ── CTA ───────────────────────────────────────────────────────────── */}
         <Link
           href="/recovery"
           className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold text-sm rounded-2xl py-4 transition-colors"
