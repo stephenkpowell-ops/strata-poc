@@ -26,17 +26,6 @@ function countHighDaysInWindow(scores: number[], threshold: number, windowSize =
     .length;
 }
 
-function getCheckInLabel(value: number): string {
-  switch (value) {
-    case 0:   return 'Zero';
-    case 25:  return 'Low';
-    case 50:  return 'Moderate';
-    case 75:  return 'High';
-    case 100: return 'Critical';
-    default:  return `${value}`;
-  }
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
 // METRIC CARD
 // ─────────────────────────────────────────────────────────────────────────────
@@ -76,9 +65,10 @@ function MetricCard({
 const BURNOUT_THRESHOLD = 70;
 
 export default function BurnoutPage() {
-  const { scores, completedSessions, checkInValue, dailyResult } = useStrata();
+  const { scores, completedSessions, dailyResult } = useStrata();
 
   const latest      = scores[scores.length - 1];
+  const todayTotal  = latest?.totalScore ?? 0;
   const last7       = scores.slice(-7);
   const last7Totals = last7.map(s => s.totalScore);
   const rollingAvg  = latest?.rollingAvg7d ?? 0;
@@ -106,7 +96,7 @@ export default function BurnoutPage() {
     : 'Wednesday';
 
   // Load driver bar widths — max across all three drivers
-  const maxDriver = Math.max(workPts, personalPts, checkInValue, 1);
+  const maxDriver = Math.max(workPts, personalPts, todayTotal, 1);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
@@ -211,32 +201,26 @@ export default function BurnoutPage() {
               </div>
             )}
 
-            {/* Check-in */}
-            <div className="flex flex-col gap-1">
+            {/* Total stress for today */}
+            <div className="flex flex-col gap-1 pt-1 border-t border-zinc-800">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-zinc-300">
-                  Check-in
-                  <span className="text-zinc-600 text-xs ml-1.5">
-                    ({getCheckInLabel(checkInValue)})
-                  </span>
-                </span>
-                <span className={`text-sm font-semibold ${
-                  checkInValue === 0 ? 'text-zinc-600' : 'text-indigo-400'
+                <span className="text-sm font-semibold text-zinc-200">Total today</span>
+                <span className={`text-sm font-bold tabular-nums ${
+                  todayTotal >= 75 ? 'text-orange-400' :
+                  todayTotal >= 50 ? 'text-indigo-400' : 'text-emerald-400'
                 }`}>
-                  {checkInValue === 0 ? '—' : `+${checkInValue} pts`}
+                  {todayTotal} pts
                 </span>
               </div>
               <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-indigo-400 rounded-full"
-                  style={{ width: `${Math.round((checkInValue / maxDriver) * 100)}%` }}
+                  className={`h-full rounded-full ${
+                    todayTotal >= 75 ? 'bg-orange-400' :
+                    todayTotal >= 50 ? 'bg-indigo-400' : 'bg-emerald-400'
+                  }`}
+                  style={{ width: `${Math.round((todayTotal / maxDriver) * 100)}%` }}
                 />
               </div>
-              {checkInValue === 0 && (
-                <span className="text-[10px] text-zinc-600">
-                  Log your check-in on the dashboard
-                </span>
-              )}
             </div>
 
           </div>

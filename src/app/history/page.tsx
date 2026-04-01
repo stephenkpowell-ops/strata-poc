@@ -185,16 +185,18 @@ function RecoveryRow({
 function CumulativeDriversCard({
   completedSessions,
   recoveryPtsTotal,
+  cumulativeTotalStress,
 }: {
-  completedSessions: number;
-  recoveryPtsTotal:  number;
+  completedSessions:     number;
+  recoveryPtsTotal:      number;
+  cumulativeTotalStress: number;
 }) {
   const loadDrivers = [
     { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined         },
     { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const },
   ];
 
-  const maxPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal);
+  const maxPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal, cumulativeTotalStress);
 
   return (
     <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-5">
@@ -223,6 +225,39 @@ function CumulativeDriversCard({
           ptsReduced={recoveryPtsTotal}
           maxPts={maxPts}
         />
+
+        {/* Cumulative total — with recovery note */}
+        <div className="flex flex-col gap-1 pt-1 border-t border-zinc-800">
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-semibold text-zinc-200">Total stress load</span>
+            <span className={`text-sm font-bold tabular-nums ${
+              cumulativeTotalStress >= 600 ? 'text-orange-400' :
+              cumulativeTotalStress >= 400 ? 'text-indigo-400' : 'text-emerald-400'
+            }`}>
+              {cumulativeTotalStress} pts
+            </span>
+          </div>
+          <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+            <div
+              className={`h-full rounded-full ${
+                cumulativeTotalStress >= 600 ? 'bg-orange-400' :
+                cumulativeTotalStress >= 400 ? 'bg-indigo-400' : 'bg-emerald-400'
+              }`}
+              style={{ width: '100%' }}
+            />
+          </div>
+          {recoveryPtsTotal > 0 && (
+            <p className="text-[10px] text-zinc-600 leading-relaxed">
+              Recovery sessions reduced your total by {recoveryPtsTotal} pts.
+              Without recovery: {cumulativeTotalStress + recoveryPtsTotal} pts.
+            </p>
+          )}
+          {recoveryPtsTotal === 0 && (
+            <p className="text-[10px] text-zinc-600 leading-relaxed">
+              Complete a Breathing Reset to reduce your cumulative total.
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -310,6 +345,7 @@ export default function HistoryPage() {
         <CumulativeDriversCard
           completedSessions={completedSessions}
           recoveryPtsTotal={recoveryPtsTotal}
+          cumulativeTotalStress={Math.max(0, scores.reduce((sum, s) => sum + s.totalScore, 0) - recoveryPtsTotal)}
         />
 
         <div className="flex flex-col gap-2">
