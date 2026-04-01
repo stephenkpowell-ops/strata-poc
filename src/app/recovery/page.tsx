@@ -6,12 +6,11 @@
  * Recovery protocol picker — Step 23.
  *
  * Shows three protocol cards with Breathing Reset pre-selected.
- * Cognitive Offload and Tension Release are visible but disabled for the POC.
+ * The Breathing Reset card includes an inline "Start Breathing Reset →"
+ * button. Cognitive Offload and Tension Release are visible but disabled.
  *
  * Context banner at the top explains why this session is recommended
  * based on the current score from the store.
- *
- * Tapping "Start Breathing Reset" routes to /recovery/session.
  */
 
 import Link from 'next/link';
@@ -28,6 +27,7 @@ function ProtocolCard({
   impact,
   selected,
   disabled,
+  showStart,
 }: {
   title:       string;
   description: string;
@@ -35,6 +35,7 @@ function ProtocolCard({
   impact:      string;
   selected?:   boolean;
   disabled?:   boolean;
+  showStart?:  boolean;
 }) {
   return (
     <div className={`flex flex-col gap-2 rounded-2xl p-4 border transition-colors ${
@@ -44,6 +45,8 @@ function ProtocolCard({
           ? 'bg-indigo-950 border-indigo-600'
           : 'bg-zinc-900 border-zinc-700'
     }`}>
+
+      {/* Header row */}
       <div className="flex items-start justify-between">
         <span className={`text-sm font-semibold ${
           disabled ? 'text-zinc-500' : selected ? 'text-indigo-300' : 'text-white'
@@ -61,9 +64,13 @@ function ProtocolCard({
           </span>
         )}
       </div>
+
+      {/* Description */}
       <p className={`text-xs leading-relaxed ${disabled ? 'text-zinc-600' : 'text-zinc-400'}`}>
         {description}
       </p>
+
+      {/* Duration and impact */}
       <div className="flex items-center gap-3 pt-1">
         <span className={`text-xs ${disabled ? 'text-zinc-600' : 'text-zinc-500'}`}>
           {duration}
@@ -75,6 +82,17 @@ function ProtocolCard({
           {impact}
         </span>
       </div>
+
+      {/* Inline start button — only on the selected card */}
+      {showStart && (
+        <Link
+          href="/recovery/session"
+          className="flex items-center justify-center bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold text-xs rounded-xl py-2.5 transition-colors mt-1"
+        >
+          Start Breathing Reset →
+        </Link>
+      )}
+
     </div>
   );
 }
@@ -127,6 +145,7 @@ export default function RecoveryPage() {
             duration="5 min"
             impact="−6 pts estimated"
             selected
+            showStart
           />
           <ProtocolCard
             title="Cognitive Offload"
@@ -143,14 +162,6 @@ export default function RecoveryPage() {
             disabled
           />
         </div>
-
-        {/* CTA */}
-        <Link
-          href="/recovery/session"
-          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white font-semibold text-sm rounded-2xl py-4 transition-colors mt-2"
-        >
-          Start Breathing Reset →
-        </Link>
 
       </div>
 
