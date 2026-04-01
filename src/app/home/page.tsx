@@ -23,9 +23,12 @@ import ForecastCard from '@/components/ForecastCard';
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
+// POC anchor date — avoids Date.now() hydration mismatches
+const POC_NOW = new Date('2025-03-25T12:00:00').getTime();
+
 function daysRemaining(trialEndsAt: Date | null): number {
   if (!trialEndsAt) return 0;
-  const ms = new Date(trialEndsAt).getTime() - Date.now();
+  const ms = new Date(trialEndsAt).getTime() - POC_NOW;
   return Math.max(0, Math.ceil(ms / (1000 * 60 * 60 * 24)));
 }
 
@@ -34,7 +37,7 @@ function trialProgressPercent(
   trialEndsAt:    Date | null,
 ): number {
   if (!trialStartedAt || !trialEndsAt) return 0;
-  const elapsed = Date.now() - new Date(trialStartedAt).getTime();
+  const elapsed = POC_NOW - new Date(trialStartedAt).getTime();
   const total   = new Date(trialEndsAt).getTime() - new Date(trialStartedAt).getTime();
   return Math.min(100, Math.max(0, Math.round((elapsed / total) * 100)));
 }

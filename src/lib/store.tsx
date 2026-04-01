@@ -5,6 +5,10 @@
  *
  * Client-side data store for the Strata POC.
  *
+ * Key fix: computeDailyScore is called with only today's events (March 25)
+ * not all fixture events. This ensures dailyResult.scoredEvents and
+ * dailyResult.topDrivers reflect today's load only, not the whole period.
+ *
  * State:
  *   - checkInValue:      mutable daily check-in (default 0 / Zero)
  *   - completedSessions: count of breathing reset sessions (pre-seeded at 4)
@@ -13,11 +17,8 @@
  * Read-only:
  *   - scores:         historical score records (score_0 through score_8, Mar 17–25)
  *   - forecastScores: forecast score records (score_9 through score_11, Mar 26–28)
- *                     These have checkInValue: 0 and totalScore = calendarPts
- *                     since they are future days with no check-in yet.
- *
- * setCheckIn(value)     — updates check-in, recalculates totalScore for today
- * logRecoverySession()  — increments session count and adds −6 pts
+ *   - events:         all fixture events (all days — used by calendar screen)
+ *   - todayEvents:    only March 25 events (used by dailyResult scoring)
  */
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -29,10 +30,20 @@ import { FIXTURE_USER, FIXTURE_SCORES, FIXTURE_EVENTS } from './mocks';
 const RECOVERY_PTS_PER_SESSION   = 6;
 const FIXTURE_COMPLETED_SESSIONS = 4;
 const FIXTURE_RECOVERY_PTS       = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION;
+const HISTORY_COUNT              = 9;
 
-// Historical scores end at score_8 (March 25)
-// Forecast scores start at score_9 (March 26)
-const HISTORY_COUNT = 9;
+// Today's date for the POC
+const TODAY = new Date('2025-03-25T12:00:00');
+
+// Filter events to today only for accurate daily scoring
+const TODAY_EVENTS: CalendarEvent[] = FIXTURE_EVENTS.filter(e => {
+  const d = new Date(e.startAt);
+  return (
+    d.getFullYear() === TODAY.getFullYear() &&
+    d.getMonth()    === TODAY.getMonth()    &&
+    d.getDate()     === TODAY.getDate()
+  );
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORE SHAPE
@@ -66,11 +77,9 @@ export function StrataProvider({ children }: { children: ReactNode }) {
   const [completedSessions, setCompletedSessions] = useState<number>(FIXTURE_COMPLETED_SESSIONS);
   const [recoveryPtsTotal,  setRecoveryPtsTotal]  = useState<number>(FIXTURE_RECOVERY_PTS);
 
-  // Split fixture scores into historical and forecast
   const historicalFixture = FIXTURE_SCORES.slice(0, HISTORY_COUNT);
   const forecastFixture   = FIXTURE_SCORES.slice(HISTORY_COUNT);
 
-  // Historical scores — most recent day gets live check-in
   const scores: StressScore[] = historicalFixture.map((s, i) => {
     if (i !== historicalFixture.length - 1) return s;
     return {
@@ -80,11 +89,9 @@ export function StrataProvider({ children }: { children: ReactNode }) {
     };
   });
 
-  // Forecast scores — unchanged (future days, no check-in)
-  const forecastScores: StressScore[] = forecastFixture;
-
+  // Score only today's events so topDrivers and scoredEvents reflect March 25
   const dailyResult: DailyScoreResult = computeDailyScore({
-    events:        FIXTURE_EVENTS,
+    events:        TODAY_EVENTS,
     calendarPrefs: [
       { includeInScoring: true, contextSwitchPenalties: true, recoveryEventsReduce: true },
     ],
@@ -98,10 +105,10 @@ export function StrataProvider({ children }: { children: ReactNode }) {
   };
 
   const state: StrataState = {
-    user: FIXTURE_USER,
+    user:   FIXTURE_USER,
     scores,
-    forecastScores,
-    events:       FIXTURE_EVENTS,
+    forecastScores: forecastFixture,
+    events:         FIXTURE_EVENTS,
     dailyResult,
     checkInValue,
     setCheckIn,

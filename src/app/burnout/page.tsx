@@ -76,7 +76,7 @@ function MetricCard({
 const BURNOUT_THRESHOLD = 70;
 
 export default function BurnoutPage() {
-  const { scores, completedSessions, checkInValue } = useStrata();
+  const { scores, completedSessions, checkInValue, dailyResult } = useStrata();
 
   const latest      = scores[scores.length - 1];
   const last7       = scores.slice(-7);
@@ -91,6 +91,13 @@ export default function BurnoutPage() {
   // Today's calendar pts (March 25)
   const calendarPtsToday = latest?.calendarPts ?? 0;
 
+  // dailyResult is now scoped to today's events only (see store.tsx)
+  // so topDrivers correctly reflects March 25 load breakdown
+  const workDriver     = dailyResult.topDrivers.find(d => d.category === 'work');
+  const personalDriver = dailyResult.topDrivers.find(d => d.category === 'active_personal');
+  const workPts        = workDriver?.totalPts     ?? calendarPtsToday;
+  const personalPts    = personalDriver?.totalPts ?? 0;
+
   // Peak day label for sparkline insight
   const peakScore = Math.max(...last7Totals);
   const peakDay   = last7[last7Totals.indexOf(peakScore)];
@@ -99,7 +106,7 @@ export default function BurnoutPage() {
     : 'Wednesday';
 
   // Load driver bar widths — max across all three drivers
-  const maxDriver = Math.max(calendarPtsToday, checkInValue, 1);
+  const maxDriver = Math.max(workPts, personalPts, checkInValue, 1);
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
@@ -143,7 +150,7 @@ export default function BurnoutPage() {
           <MetricCard
             label="Sessions"
             value={String(completedSessions)}
-            sub="this week"
+            sub="last 7 days"
           />
         </div>
 
@@ -175,16 +182,34 @@ export default function BurnoutPage() {
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-300">Work meetings</span>
                 <span className="text-sm font-semibold text-orange-400">
-                  +{calendarPtsToday} pts
+                  +{workPts} pts
                 </span>
               </div>
               <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-orange-400 rounded-full"
-                  style={{ width: `${Math.round((calendarPtsToday / maxDriver) * 100)}%` }}
+                  style={{ width: `${Math.round((workPts / maxDriver) * 100)}%` }}
                 />
               </div>
             </div>
+
+            {/* Active personal */}
+            {personalPts > 0 && (
+              <div className="flex flex-col gap-1">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-zinc-300">Active personal</span>
+                  <span className="text-sm font-semibold text-indigo-400">
+                    +{personalPts} pts
+                  </span>
+                </div>
+                <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-indigo-400 rounded-full"
+                    style={{ width: `${Math.round((personalPts / maxDriver) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
 
             {/* Check-in */}
             <div className="flex flex-col gap-1">

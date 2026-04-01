@@ -37,8 +37,8 @@ export const FIXTURE_USER: User = {
   ageRange: '35–44',
   persona: 'managing_load',
   tier: 'signal',
-  trialEndsAt: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
-  trialStartedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
+  trialEndsAt: new Date('2025-03-30T12:00:00'),   // 5 days after POC today (Mar 25)
+  trialStartedAt: new Date('2025-03-23T12:00:00'), // 2 days before POC today
   createdAt: new Date(),
   updatedAt: new Date(),
 };
