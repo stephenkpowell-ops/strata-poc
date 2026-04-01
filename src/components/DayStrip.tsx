@@ -8,13 +8,13 @@
  * Displays one tab per score record showing:
  *   - Day abbreviation (Mon, Tue, etc.)
  *   - Date number
- *   - Colour-coded stress dot:
- *       green  (bg-emerald-400) = totalScore < 50
- *       indigo (bg-indigo-400)  = totalScore 50–74
- *       orange (bg-orange-400)  = totalScore >= 75
+ *   - Color-coded stress dot based on calendarPts (meeting load only):
+ *       green  (bg-emerald-400) = calendarPts < 40  — light day
+ *       indigo (bg-indigo-400)  = calendarPts 40–74 — elevated load
+ *       orange (bg-orange-400)  = calendarPts >= 75  — high load day
  *
- * The selected day is highlighted on an obsidian background.
- * Tapping any day calls onSelectDay with that day's index.
+ * Dots reflect meeting load specifically, consistent with the
+ * DailyStressSummary bar on the calendar screen.
  *
  * Usage:
  *   <DayStrip
@@ -31,18 +31,18 @@ import { StressScore } from '@/lib/interfaces/types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
-  scores: StressScore[];
+  scores:       StressScore[];
   selectedIndex: number;
-  onSelectDay: (index: number) => void;
+  onSelectDay:  (index: number) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function getDotColour(totalScore: number): string {
-  if (totalScore >= 75) return 'bg-orange-400';
-  if (totalScore >= 50) return 'bg-indigo-400';
+function getDotColor(calendarPts: number): string {
+  if (calendarPts >= 75) return 'bg-orange-400';
+  if (calendarPts >= 40) return 'bg-indigo-400';
   return 'bg-emerald-400';
 }
 
@@ -56,7 +56,7 @@ export default function DayStrip({ scores, selectedIndex, onSelectDay }: Props) 
   return (
     <div className="flex justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800">
       {scores.map((score, i) => {
-        const date = new Date(score.date);
+        const date       = new Date(score.date);
         const isSelected = i === selectedIndex;
 
         return (
@@ -77,7 +77,7 @@ export default function DayStrip({ scores, selectedIndex, onSelectDay }: Props) 
             }`}>
               {date.getDate()}
             </span>
-            <span className={`w-1.5 h-1.5 rounded-full ${getDotColour(score.totalScore)}`} />
+            <span className={`w-1.5 h-1.5 rounded-full ${getDotColor(score.calendarPts)}`} />
           </button>
         );
       })}
