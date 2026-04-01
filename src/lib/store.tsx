@@ -11,18 +11,11 @@
  *
  * The store supports a mutable check-in value. Calling setCheckIn()
  * updates the check-in for the most recent score record and recomputes
- * totalScore immediately. This allows the home screen check-in card to
- * update the score in real time.
+ * totalScore immediately.
  *
- * Usage:
- *
- *   // 1. Wrap the root layout (src/app/layout.tsx):
- *   import { StrataProvider } from '@/lib/store';
- *   <StrataProvider>{children}</StrataProvider>
- *
- *   // 2. Use in any client component:
- *   import { useStrata } from '@/lib/store';
- *   const { user, scores, events, dailyResult, checkInValue, setCheckIn } = useStrata();
+ * Default check-in is 0 (Zero) — the user must explicitly log their
+ * check-in each day. This reflects the intended UX where the check-in
+ * is a deliberate daily input, not pre-filled.
  */
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -55,10 +48,8 @@ const StrataContext = createContext<StrataState | null>(null);
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function StrataProvider({ children }: { children: ReactNode }) {
-  // Check-in value for the most recent day — mutable via setCheckIn
-  const [checkInValue, setCheckInValue] = useState<number>(
-    FIXTURE_SCORES[FIXTURE_SCORES.length - 1]?.checkInValue ?? 50
-  );
+  // Default check-in is 0 (Zero) — user must explicitly log each day
+  const [checkInValue, setCheckInValue] = useState<number>(0);
 
   // Scores with the most recent record updated to reflect current check-in
   const scores: StressScore[] = FIXTURE_SCORES.map((s, i) => {

@@ -7,7 +7,7 @@
  *
  * Shows:
  *   - 9-day summary card (avg score, peak day, lowest day, mini sparkline)
- *   - Top load drivers — calendar categories plus a Check-In row
+ *   - Top load drivers — cumulative totals across all 9 days including check-in
  *   - Score history list (most recent first, color-coded)
  *     March 25 shows the live check-in value from the store.
  *     All other days show their fixture check-in values.
@@ -49,6 +49,18 @@ function getCheckInLabel(value: number): string {
     case 100: return 'Critical';
     default:  return `${value}`;
   }
+}
+
+function getDriverColor(pts: number): string {
+  if (pts >= 150) return 'text-orange-400';
+  if (pts >= 75)  return 'text-indigo-400';
+  return 'text-emerald-400';
+}
+
+function getDriverBarColor(pts: number): string {
+  if (pts >= 150) return 'bg-orange-400';
+  if (pts >= 75)  return 'bg-indigo-400';
+  return 'bg-emerald-400';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -100,7 +112,7 @@ function SummaryCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DRIVER ROW — shared between calendar drivers and check-in
+// DRIVER ROW
 // ─────────────────────────────────────────────────────────────────────────────
 
 function DriverRow({
@@ -112,10 +124,6 @@ function DriverRow({
   pts:    number;
   maxPts: number;
 }) {
-  const ptsColor = pts >= 20 ? 'text-orange-400' :
-                   pts >= 8  ? 'text-indigo-400' : 'text-emerald-400';
-  const barColor = pts >= 20 ? 'bg-orange-400' :
-                   pts >= 8  ? 'bg-indigo-400'  : 'bg-emerald-400';
   const barWidth = maxPts > 0
     ? `${Math.round((pts / maxPts) * 100)}%`
     : '0%';
@@ -123,16 +131,14 @@ function DriverRow({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
-        <span className="text-sm text-zinc-300 capitalize">
-          {label}
-        </span>
-        <span className={`text-sm font-semibold tabular-nums ${ptsColor}`}>
+        <span className="text-sm text-zinc-300 capitalize">{label}</span>
+        <span className={`text-sm font-semibold tabular-nums ${getDriverColor(pts)}`}>
           +{pts} pts
         </span>
       </div>
       <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full ${barColor}`}
+          className={`h-full rounded-full ${getDriverBarColor(pts)}`}
           style={{ width: barWidth }}
         />
       </div>
@@ -141,28 +147,29 @@ function DriverRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOP LOAD DRIVERS CARD
+// TOP LOAD DRIVERS CARD — cumulative across all 9 days
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TopDriversCard({
-  drivers,
+  scores,
   checkInValue,
 }: {
-  drivers:      { category: string; totalPts: number }[];
+  scores:       { checkInValue: number; calendarPts: number }[];
   checkInValue: number;
 }) {
-  if (drivers.length === 0 && checkInValue === 0) return null;
+  // Cumulative calendar pts per category across all days
+  // Work meetings = sum of all calendarPts (simplified — full breakdown
+  // would require per-day StressEngine output which is out of scope for POC)
+  const totalCalPts = scores.reduce((sum, s) => sum + s.calendarPts, 0);
 
-  // Build the full list: calendar drivers + check-in row
+  // Cumulative check-in: sum of fixture values for days 0-7,
+  // plus the live check-in for the most recent day (index 8)
+  const totalCheckIn = scores.slice(0, -1).reduce((sum, s) => sum + s.checkInValue, 0)
+    + checkInValue;
+
   const allDrivers = [
-    ...drivers.slice(0, 4).map(d => ({
-      label: d.category.replace(/_/g, ' '),
-      pts:   d.totalPts,
-    })),
-    {
-      label: `Check-in (${getCheckInLabel(checkInValue)})`,
-      pts:   checkInValue,
-    },
+    { label: 'Work meetings',  pts: totalCalPts   },
+    { label: 'Check-in total', pts: totalCheckIn  },
   ];
 
   const maxPts = Math.max(...allDrivers.map(d => d.pts));
@@ -171,11 +178,10 @@ function TopDriversCard({
     <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-5">
       <div className="flex flex-col gap-0.5">
         <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-          Top load drivers
+          Cumulative load drivers
         </span>
-        <span className="text-xs text-zinc-600">Most recent scored day</span>
+        <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · total pts contributed</span>
       </div>
-
       <div className="flex flex-col gap-3">
         {allDrivers.map((driver, i) => (
           <DriverRow
@@ -238,12 +244,8 @@ function ScoreRow({
           />
         </div>
         <div className="flex gap-3">
-          <span className="text-[10px] text-zinc-600">
-            Cal {calendarPts} pts
-          </span>
-          <span className="text-[10px] text-zinc-600">
-            Check-in {checkLabel}
-          </span>
+          <span className="text-[10px] text-zinc-600">Cal {calendarPts} pts</span>
+          <span className="text-[10px] text-zinc-600">Check-in {checkLabel}</span>
         </div>
       </div>
 
@@ -266,7 +268,7 @@ function ScoreRow({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HistoryPage() {
-  const { scores, dailyResult, checkInValue } = useStrata();
+  const { scores, checkInValue } = useStrata();
 
   const sortedScores = [...scores].reverse();
 
@@ -290,9 +292,9 @@ export default function HistoryPage() {
         {/* 9-day summary */}
         <SummaryCard scores={scores} />
 
-        {/* Top load drivers — includes check-in row */}
+        {/* Cumulative load drivers */}
         <TopDriversCard
-          drivers={dailyResult.topDrivers}
+          scores={scores}
           checkInValue={checkInValue}
         />
 
