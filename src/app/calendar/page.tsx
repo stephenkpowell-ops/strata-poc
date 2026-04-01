@@ -3,14 +3,12 @@
 /**
  * src/app/calendar/page.tsx
  *
- * Calendar screen — the core differentiator of the Strata POC.
+ * Calendar screen.
  *
- * Current state (Steps 10–14 + daily stress summary):
- *   - DayStrip renders across the top with color-coded stress dots
- *   - Daily stress summary bar shows total calendar pts for the selected day
- *   - Timeline events list with color-coded EventRow components
- *   - GapIndicator between consecutive events
- *   - EventDetail slide-up panel on event tap
+ * The day strip shows all score records — both historical (Mar 17–25)
+ * and forecast (Mar 26–28) — so the user can tap into forecast days
+ * and see their planned events. Forecast days are visually distinguished
+ * with a dashed dot border to signal they are projected, not actual.
  *
  * Load thresholds (dots + summary bar):
  *   green  = calendarPts < 35   — light day
@@ -66,9 +64,11 @@ function getStressBg(pts: number): string {
 function DailyStressSummary({
   calendarPts,
   eventCount,
+  isForecast,
 }: {
   calendarPts: number;
   eventCount:  number;
+  isForecast:  boolean;
 }) {
   const color = getStressColor(calendarPts);
   const label = getStressLabel(calendarPts);
@@ -83,6 +83,11 @@ function DailyStressSummary({
         <span className="text-zinc-600 text-xs">
           · {eventCount} {eventCount === 1 ? 'event' : 'events'}
         </span>
+        {isForecast && (
+          <span className="text-[10px] font-semibold uppercase tracking-wider text-indigo-400 bg-indigo-950 border border-indigo-800 px-1.5 py-0.5 rounded-full">
+            Forecast
+          </span>
+        )}
       </div>
       <div className="flex items-center gap-1">
         <span className="text-xs text-zinc-500">Meeting load</span>
@@ -99,13 +104,18 @@ function DailyStressSummary({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function CalendarPage() {
-  const { scores, events, dailyResult } = useStrata();
+  const { scores, forecastScores, events, dailyResult } = useStrata();
 
-  const [selectedIndex,  setSelectedIndex]  = useState(scores.length - 1);
+  // Combine historical and forecast scores for the day strip
+  const allScores    = [...scores, ...forecastScores];
+  const historyCount = scores.length; // first N entries are historical
+
+  const [selectedIndex,   setSelectedIndex]   = useState(scores.length - 1);
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  const selectedScore    = scores[selectedIndex];
-  const selectedDate     = selectedScore?.date;
+  const selectedScore  = allScores[selectedIndex];
+  const selectedDate   = selectedScore?.date;
+  const isForecast     = selectedIndex >= historyCount;
   const calendarPtsToday = selectedScore?.calendarPts ?? 0;
 
   const dayEvents = events
@@ -122,9 +132,9 @@ export default function CalendarPage() {
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
-      {/* Day strip */}
+      {/* Day strip — all 12 days */}
       <DayStrip
-        scores={scores}
+        scores={allScores}
         selectedIndex={selectedIndex}
         onSelectDay={(i) => {
           setSelectedIndex(i);
@@ -136,6 +146,7 @@ export default function CalendarPage() {
       <DailyStressSummary
         calendarPts={calendarPtsToday}
         eventCount={dayEvents.length}
+        isForecast={isForecast}
       />
 
       {/* Timeline */}

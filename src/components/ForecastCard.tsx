@@ -124,7 +124,7 @@ export default function ForecastCard({ forecastScores }: Props) {
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            5-Day Meeting Forecast
+            5-Day Forecast
           </span>
           <span className="text-xs text-zinc-600">
             Projected calendar load
