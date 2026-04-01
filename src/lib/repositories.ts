@@ -26,7 +26,7 @@ import type {
   AlertRule, AlertEvent, AlertRuleType,
   Subscription,
   DateRange, PaginationParams, PaginatedResult,
-} from './types';
+} from './interfaces/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // USER REPOSITORY
