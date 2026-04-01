@@ -12,7 +12,7 @@
  * identically on the server, in a background job, or in a mobile client.
  */
 
-import type { CalendarEvent, EventCategory, ConnectedCalendar } from './interfaces/types';
+import type { CalendarEvent, EventCategory, ConnectedCalendar } from '../interfaces/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BASE WEIGHTS
@@ -21,7 +21,7 @@ import type { CalendarEvent, EventCategory, ConnectedCalendar } from './interfac
 const BASE_WEIGHTS: Record<EventCategory, number> = {
   logistical:      1,
   recurring_admin: 2,
-  active_personal: 4,
+  active_personal: 6,
   high_stakes:     7,
   recovery:        -2,
   work:            0,   // work events scored separately via meeting density model

@@ -101,7 +101,7 @@ describe('Personal event base weights', () => {
   it.each([
     ['logistical',      1],
     ['recurring_admin', 2],
-    ['active_personal', 4],
+    ['active_personal', 6],
     ['high_stakes',     7],
   ])('scores %s event at +%i pts base (after 5pm, no adjacency)', (category, expectedBase) => {
     const events = [makeEvent({
@@ -133,8 +133,7 @@ describe('Context-switch multipliers — doctor appointment worked example', () 
    * Tuesday schedule from the UX documentation:
    *   09:30 All-hands (work)       → +18 pts
    *   10:30 Exec review (work)     → +19 pts (back-to-back with all-hands)
-   *   11:40 Doctor appt (personal) → +10 pts (base 4 + midday 2 + adjacency 4)
-   *                                   gap from exec review = 10 min → ADJACENCY_HARD fires
+   *   12:00 Doctor appt (personal) → +10 pts (base 4 + midday 2 + adjacency 4)
    *   17:30 Kids pickup (personal) → +1 pt  (base 1, after hours, no adjacency)
    */
   const events = [
@@ -143,7 +142,7 @@ describe('Context-switch multipliers — doctor appointment worked example', () 
     makeEvent({ id: 'w2', tag: 'work', category: 'work',
       startAt: new Date('2025-03-25T10:30:00'), endAt: new Date('2025-03-25T11:30:00') }),
     makeEvent({ id: 'p1', tag: 'personal', category: 'active_personal',
-      startAt: new Date('2025-03-25T11:40:00'), endAt: new Date('2025-03-25T12:40:00') }),
+      startAt: new Date('2025-03-25T12:00:00'), endAt: new Date('2025-03-25T13:00:00') }),
     makeEvent({ id: 'p2', tag: 'personal', category: 'logistical',
       startAt: new Date('2025-03-25T17:30:00'), endAt: new Date('2025-03-25T18:00:00') }),
   ];
@@ -160,10 +159,10 @@ describe('Context-switch multipliers — doctor appointment worked example', () 
     expect(doctorScore?.breakdown.adjacency).toBe(4);
   });
 
-  it('scores doctor appointment at +10 total (base 4 + midday 2 + adjacency 4)', () => {
+  it('scores doctor appointment at +12 total (base 6 + midday 2 + adjacency 4)', () => {
     const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 0 });
     const doctorScore = result.scoredEvents.find(s => s.eventId === 'p1');
-    expect(doctorScore?.totalStressPts).toBe(10);
+    expect(doctorScore?.totalStressPts).toBe(12);
   });
 
   it('scores kids pickup at +1 (base only — after hours, no adjacent work meetings)', () => {
@@ -189,9 +188,9 @@ describe('Sandwich pattern (work → personal → work)', () => {
     ];
     const result = computeDailyScore({ events, calendarPrefs: defaultPrefs, checkInValue: 0 });
     const personalScore = result.scoredEvents.find(s => s.eventId === 'p1');
-    // base 4 + midday 2 + sandwich 6 = 12
+    // base 6 + midday 2 + sandwich 6 = 14
     expect(personalScore?.breakdown.sandwich).toBe(6);
-    expect(personalScore?.totalStressPts).toBe(12);
+    expect(personalScore?.totalStressPts).toBe(14);
   });
 });
 
@@ -224,7 +223,7 @@ describe('Context-switch penalties disabled by user preference', () => {
     const personalScore = result.scoredEvents.find(s => s.eventId === 'p1');
     // Only base weight, no penalties
     expect(personalScore?.contextSwitchPts).toBe(0);
-    expect(personalScore?.totalStressPts).toBe(4);
+    expect(personalScore?.totalStressPts).toBe(6);
   });
 });
 
