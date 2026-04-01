@@ -12,7 +12,7 @@
  * identically on the server, in a background job, or in a mobile client.
  */
 
-import type { CalendarEvent, EventCategory, ConnectedCalendar } from '../interfaces/types';
+import type { CalendarEvent, EventCategory, ConnectedCalendar } from './interfaces/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BASE WEIGHTS
