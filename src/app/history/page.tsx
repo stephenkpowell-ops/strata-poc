@@ -7,7 +7,7 @@
  *
  * Shows:
  *   - 9-day summary card (avg score, peak day, lowest day, mini sparkline)
- *   - Top load drivers from the most recent day's StressEngine output
+ *   - Top load drivers — calendar categories plus a Check-In row
  *   - Score history list (most recent first, color-coded)
  *     March 25 shows the live check-in value from the store.
  *     All other days show their fixture check-in values.
@@ -52,7 +52,7 @@ function getCheckInLabel(value: number): string {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// WEEKLY SUMMARY CARD
+// 9-DAY SUMMARY CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
 function SummaryCard({
@@ -100,16 +100,72 @@ function SummaryCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TOP DRIVERS CARD
+// DRIVER ROW — shared between calendar drivers and check-in
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DriverRow({
+  label,
+  pts,
+  maxPts,
+}: {
+  label:  string;
+  pts:    number;
+  maxPts: number;
+}) {
+  const ptsColor = pts >= 20 ? 'text-orange-400' :
+                   pts >= 8  ? 'text-indigo-400' : 'text-emerald-400';
+  const barColor = pts >= 20 ? 'bg-orange-400' :
+                   pts >= 8  ? 'bg-indigo-400'  : 'bg-emerald-400';
+  const barWidth = maxPts > 0
+    ? `${Math.round((pts / maxPts) * 100)}%`
+    : '0%';
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-zinc-300 capitalize">
+          {label}
+        </span>
+        <span className={`text-sm font-semibold tabular-nums ${ptsColor}`}>
+          +{pts} pts
+        </span>
+      </div>
+      <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+        <div
+          className={`h-full rounded-full ${barColor}`}
+          style={{ width: barWidth }}
+        />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TOP LOAD DRIVERS CARD
 // ─────────────────────────────────────────────────────────────────────────────
 
 function TopDriversCard({
   drivers,
+  checkInValue,
 }: {
-  drivers: { category: string; totalPts: number }[];
+  drivers:      { category: string; totalPts: number }[];
+  checkInValue: number;
 }) {
-  if (drivers.length === 0) return null;
-  const maxPts = Math.max(...drivers.map(d => d.totalPts));
+  if (drivers.length === 0 && checkInValue === 0) return null;
+
+  // Build the full list: calendar drivers + check-in row
+  const allDrivers = [
+    ...drivers.slice(0, 4).map(d => ({
+      label: d.category.replace(/_/g, ' '),
+      pts:   d.totalPts,
+    })),
+    {
+      label: `Check-in (${getCheckInLabel(checkInValue)})`,
+      pts:   checkInValue,
+    },
+  ];
+
+  const maxPts = Math.max(...allDrivers.map(d => d.pts));
 
   return (
     <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-5">
@@ -119,30 +175,15 @@ function TopDriversCard({
         </span>
         <span className="text-xs text-zinc-600">Most recent scored day</span>
       </div>
+
       <div className="flex flex-col gap-3">
-        {drivers.slice(0, 4).map((driver, i) => (
-          <div key={i} className="flex flex-col gap-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-zinc-300 capitalize">
-                {driver.category.replace('_', ' ')}
-              </span>
-              <span className={`text-sm font-semibold tabular-nums ${
-                driver.totalPts >= 20 ? 'text-orange-400' :
-                driver.totalPts >= 8  ? 'text-indigo-400' : 'text-emerald-400'
-              }`}>
-                +{driver.totalPts} pts
-              </span>
-            </div>
-            <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className={`h-full rounded-full ${
-                  driver.totalPts >= 20 ? 'bg-orange-400' :
-                  driver.totalPts >= 8  ? 'bg-indigo-400' : 'bg-emerald-400'
-                }`}
-                style={{ width: `${Math.round((driver.totalPts / maxPts) * 100)}%` }}
-              />
-            </div>
-          </div>
+        {allDrivers.map((driver, i) => (
+          <DriverRow
+            key={i}
+            label={driver.label}
+            pts={driver.pts}
+            maxPts={maxPts}
+          />
         ))}
       </div>
     </div>
@@ -227,7 +268,6 @@ function ScoreRow({
 export default function HistoryPage() {
   const { scores, dailyResult, checkInValue } = useStrata();
 
-  // Most recent first for the list
   const sortedScores = [...scores].reverse();
 
   return (
@@ -250,8 +290,11 @@ export default function HistoryPage() {
         {/* 9-day summary */}
         <SummaryCard scores={scores} />
 
-        {/* Top load drivers */}
-        <TopDriversCard drivers={dailyResult.topDrivers} />
+        {/* Top load drivers — includes check-in row */}
+        <TopDriversCard
+          drivers={dailyResult.topDrivers}
+          checkInValue={checkInValue}
+        />
 
         {/* Score history list */}
         <div className="flex flex-col gap-2">
@@ -259,9 +302,7 @@ export default function HistoryPage() {
             Score history
           </span>
           {sortedScores.map((score, i) => {
-            const isLatest = i === 0;
-            // March 25 (most recent) uses the live check-in from the store.
-            // All other days use their fixture check-in value.
+            const isLatest       = i === 0;
             const displayCheckIn = isLatest ? checkInValue : score.checkInValue;
             const displayTotal   = isLatest
               ? Math.min(100, checkInValue + score.calendarPts)
