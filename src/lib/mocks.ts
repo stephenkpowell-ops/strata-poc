@@ -72,6 +72,10 @@ export const FIXTURE_SCORES: StressScore[] = [
   { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 0,  totalScore: 25,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 50, calendarPts: 22, totalScore: 72,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 50, calendarPts: 30, totalScore: 80,  rollingAvg7d: 71, createdAt: new Date(), updatedAt: new Date() },
+  // Forecast days — checkInValue: 0 (future, no check-in logged yet)
+  { id: 'score_9',  userId: FIXTURE_USER.id, date: new Date('2025-03-26T12:00:00'), checkInValue: 0,  calendarPts: 24, totalScore: 24,  rollingAvg7d: 60, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_10', userId: FIXTURE_USER.id, date: new Date('2025-03-27T12:00:00'), checkInValue: 0,  calendarPts: 59, totalScore: 59,  rollingAvg7d: 54, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_11', userId: FIXTURE_USER.id, date: new Date('2025-03-28T12:00:00'), checkInValue: 0,  calendarPts: 22, totalScore: 22,  rollingAvg7d: 49, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -173,6 +177,30 @@ export const FIXTURE_EVENTS: CalendarEvent[] = [
   // p22_2: grocery run — base 1 + midday 2 = 3 (no adjacent work meetings)
   personalEvent('p22_1', 'g22_1', 'Morning run',   'active_personal', '2025-03-22T08:00:00', '2025-03-22T09:00:00'),
   personalEvent('p22_2', 'g22_2', 'Grocery run',   'logistical',      '2025-03-22T11:00:00', '2025-03-22T12:00:00'),
+
+  // ── Wednesday March 26 — 24 cal pts (forecast) ──────────────────────────────
+  // w26_1: 8pts, p26_1: 8pts (gym base6+midday2, full buffer on both sides)
+  // w26_2: 8pts
+  workEvent('w26_1', 'g26_1', 'Morning Standup',       '2025-03-26T09:00:00', '2025-03-26T09:30:00', 6,  true,  'rec_standup'),
+  personalEvent('p26_1', 'g26_2', 'Gym',               'active_personal',     '2025-03-26T12:00:00', '2025-03-26T13:00:00'),
+  workEvent('w26_2', 'g26_3', '1:1 with PM',            '2025-03-26T14:00:00', '2025-03-26T14:30:00', 2,  true,  'rec_1on1_pm_wed'),
+
+  // ── Thursday March 27 — 59 cal pts (forecast) ────────────────────────────
+  // w27_1: 8pts, w27_2: 14pts (b2b), w27_3: 14pts (b2b)
+  // p27_1: 3pts (logistical base1+midday2, 30min gap from w27_3 — full buffer)
+  // w27_4: 8pts, w27_5: 12pts (late day)
+  workEvent('w27_1', 'g27_1', 'Roadmap Sync',           '2025-03-27T09:00:00', '2025-03-27T10:00:00', 8,  true,  'rec_roadmap_thu'),
+  workEvent('w27_2', 'g27_2', 'Exec Sync',              '2025-03-27T10:00:00', '2025-03-27T11:00:00', 6,  false, null),
+  workEvent('w27_3', 'g27_3', 'Product Review',         '2025-03-27T11:00:00', '2025-03-27T12:00:00', 8,  false, null),
+  personalEvent('p27_1', 'g27_4', 'Lunch errand',       'logistical',          '2025-03-27T12:30:00', '2025-03-27T13:00:00'),
+  workEvent('w27_4', 'g27_5', 'Customer Call',          '2025-03-27T14:00:00', '2025-03-27T15:00:00', 3,  false, null),
+  workEvent('w27_5', 'g27_6', 'Late Planning Session',  '2025-03-27T16:30:00', '2025-03-27T17:30:00', 5,  false, null),
+
+  // ── Friday March 28 — 22 cal pts (forecast) ──────────────────────────────
+  // w28_1: 8pts, w28_2: 8pts, p28_1: 6pts (active_personal after hours, no midday)
+  workEvent('w28_1', 'g28_1', 'Weekly Metrics Review',  '2025-03-28T09:30:00', '2025-03-28T10:00:00', 6,  true,  'rec_metrics_fri'),
+  workEvent('w28_2', 'g28_2', '1:1 with PM',            '2025-03-28T10:30:00', '2025-03-28T11:00:00', 2,  true,  'rec_1on1_pm_fri'),
+  personalEvent('p28_1', 'g28_3', 'Family dinner',      'active_personal',     '2025-03-28T18:30:00', '2025-03-28T20:00:00'),
 
   // ── Tuesday March 25 — 28 cal pts ────────────────────────────────────────
   // evt_001: 8pts, evt_002: 14pts (back-to-back), evt_003: 6pts (midday)

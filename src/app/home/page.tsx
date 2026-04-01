@@ -6,11 +6,11 @@
  * Home screen.
  *
  * Sections (top to bottom):
- *   1. ScoreCard       — today's stress score with calendar + check-in breakdown
- *   2. CheckInCard     — daily self-reported stress level
- *   3. ForecastCard    — 5-day predictive calendar load with opinionated insight
- *   4. BurnoutBanner   — fires when rollingAvg7d > 70, routes to /burnout
- *   5. TrialProgressBar — days remaining in free trial
+ *   1. ScoreCard          — today's stress score with calendar + check-in breakdown
+ *   2. CheckInCard        — daily self-reported stress level
+ *   3. ForecastCard       — 5-day meeting forecast with opinionated insight
+ *   4. BurnoutBanner      — fires when rollingAvg7d > 70, routes to /burnout
+ *   5. TrialProgressBar   — days remaining in free trial
  */
 
 import Link from 'next/link';
@@ -114,7 +114,7 @@ function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { scores, user, checkInValue, setCheckIn, forecast } = useStrata();
+  const { scores, user, checkInValue, setCheckIn, forecastScores } = useStrata();
 
   const latest = scores[scores.length - 1];
   const last7  = scores.slice(-7).map(s => s.totalScore);
@@ -144,7 +144,7 @@ export default function HomePage() {
 
       <div className="flex flex-col gap-4 px-6 pb-8">
 
-        {/* 1. Score card */}
+        {/* 1. Score card — today */}
         <ScoreCard
           currentScore={latest.totalScore}
           calendarPts={latest.calendarPts}
@@ -153,14 +153,14 @@ export default function HomePage() {
           recentScores={last7}
         />
 
-        {/* 2. Daily check-in */}
+        {/* 2. Daily check-in — today */}
         <CheckInCard
           currentValue={checkInValue}
           onSelect={setCheckIn}
         />
 
-        {/* 3. 5-day forecast */}
-        <ForecastCard forecast={forecast} />
+        {/* 3. 5-day meeting forecast */}
+        <ForecastCard forecastScores={forecastScores} />
 
         {/* 4. Burnout alert banner */}
         <BurnoutAlertBanner rollingAvg={latest.rollingAvg7d} />

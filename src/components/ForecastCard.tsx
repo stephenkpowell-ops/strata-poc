@@ -3,31 +3,41 @@
 /**
  * ForecastCard.tsx
  *
- * 5-day predictive stress forecast card for the home screen.
+ * 5-Day Meeting Forecast card for the home screen.
  *
- * Shows the next 5 days of projected calendar load with:
- *   - Day label + date number
- *   - Color-coded load bar
- *   - calendarPts value
- *   - A single opinionated insight line at the bottom
+ * Shows the next 5 days of projected calendar load pulled directly
+ * from FIXTURE_SCORES (score_9 through score_11 for Mar 26–28,
+ * plus Sat/Sun with 0 pts) so the values always match what appears
+ * on the calendar screen.
  *
- * Load thresholds:
- *   green  (calendarPts < 35)  — Light
- *   indigo (calendarPts 36–70) — Elevated
- *   orange (calendarPts >= 71) — High Load
+ * For Mar 26–28 the score records exist in FIXTURE_SCORES with
+ * checkInValue: 0 and totalScore = calendarPts (forecast — no
+ * check-in logged yet). The card shows calendarPts only.
+ *
+ * Sat Mar 29 and Sun Mar 30 are generated inline as rest days.
  *
  * Usage:
- *   <ForecastCard forecast={forecast} />
+ *   <ForecastCard forecastScores={forecastScores} />
  */
 
-import type { ForecastDay } from '@/lib/mocks';
+import type { StressScore } from '@/lib/interfaces/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROPS
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
-  forecast: ForecastDay[];
+  forecastScores: StressScore[];
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// TYPES
+// ─────────────────────────────────────────────────────────────────────────────
+
+interface ForecastSlot {
+  date:        Date;
+  calendarPts: number;
+  isRest:      boolean;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -36,10 +46,11 @@ interface Props {
 
 const DAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-function getDotColor(pts: number): string {
+function getBarColor(pts: number): string {
   if (pts >= 71) return 'bg-orange-400';
   if (pts >= 36) return 'bg-indigo-400';
-  return 'bg-emerald-400';
+  if (pts > 0)   return 'bg-emerald-400';
+  return 'bg-zinc-800';
 }
 
 function getTextColor(pts: number): string {
@@ -48,57 +59,34 @@ function getTextColor(pts: number): string {
   return 'text-emerald-400';
 }
 
-function getLoadLabel(pts: number): string {
+function getLoadLabel(pts: number, isRest: boolean): string {
+  if (isRest)    return 'Rest';
   if (pts >= 71) return 'High';
   if (pts >= 36) return 'Elevated';
-  if (pts === 0)  return 'Free';
+  if (pts === 0) return 'Free';
   return 'Light';
 }
 
-/**
- * Generate an opinionated insight line based on the 5-day forecast.
- * Looks for the heaviest day, recovery windows, and back-to-back risks.
- */
-function generateInsight(forecast: ForecastDay[]): string {
-  const workdays   = forecast.filter(d => d.calendarPts > 0);
-  const heaviest   = forecast.reduce((a, b) => a.calendarPts > b.calendarPts ? a : b);
-  const highDays   = forecast.filter(d => d.calendarPts >= 71);
-  const lightDays  = forecast.filter(d => d.calendarPts > 0 && d.calendarPts < 35);
-  const freeDays   = forecast.filter(d => d.calendarPts === 0);
-
-  // Identify back-to-backs on the heaviest day
-  const hasB2B = heaviest.events.some((e, i) => {
-    if (i === 0 || e.category !== 'work') return false;
-    const prev = heaviest.events[i - 1];
-    return prev.category === 'work' && prev.end === e.start;
-  });
+function generateInsight(slots: ForecastSlot[]): string {
+  const workdays  = slots.filter(d => d.calendarPts > 0 && !d.isRest);
+  const heaviest  = slots.reduce((a, b) => a.calendarPts > b.calendarPts ? a : b);
+  const highDays  = workdays.filter(d => d.calendarPts >= 71);
+  const lightDays = workdays.filter(d => d.calendarPts > 0 && d.calendarPts < 35);
 
   const heaviestDay = DAY_LABELS[new Date(heaviest.date).getDay()];
 
   if (highDays.length >= 2) {
     return `${highDays.length} high-load days ahead — prioritize recovery tonight.`;
   }
-
-  if (heaviest.calendarPts >= 36 && hasB2B) {
-    return `${heaviestDay} has back-to-back meetings with no buffer — protect your morning.`;
-  }
-
   if (heaviest.calendarPts >= 36) {
     return `${heaviestDay} is your heaviest day — consider a recovery session beforehand.`;
   }
-
-  if (freeDays.length >= 2 && lightDays.length >= 1) {
-    return `Light week ahead — good window to build recovery capacity.`;
-  }
-
   if (lightDays.length >= 2) {
     return `Lighter days ahead — a good stretch to front-load recovery sessions.`;
   }
-
   if (workdays.length === 0) {
     return `No meetings in the next 5 days — use the space to reset.`;
   }
-
   return `Manageable week ahead — maintain your check-in routine.`;
 }
 
@@ -106,9 +94,28 @@ function generateInsight(forecast: ForecastDay[]): string {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ForecastCard({ forecast }: Props) {
-  const insight = generateInsight(forecast);
-  const maxPts  = Math.max(...forecast.map(d => d.calendarPts), 1);
+export default function ForecastCard({ forecastScores }: Props) {
+  // Build 5 slots: use the 3 forecast score records + Sat/Sun as rest days
+  const slots: ForecastSlot[] = [
+    ...forecastScores.slice(0, 3).map(s => ({
+      date:        new Date(s.date),
+      calendarPts: s.calendarPts,
+      isRest:      false,
+    })),
+    {
+      date:        new Date('2025-03-29T12:00:00'),
+      calendarPts: 0,
+      isRest:      true,
+    },
+    {
+      date:        new Date('2025-03-30T12:00:00'),
+      calendarPts: 0,
+      isRest:      true,
+    },
+  ];
+
+  const insight = generateInsight(slots);
+  const maxPts  = Math.max(...slots.map(d => d.calendarPts), 1);
 
   return (
     <div className="flex flex-col gap-4 bg-zinc-900 rounded-2xl p-5">
@@ -117,7 +124,7 @@ export default function ForecastCard({ forecast }: Props) {
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-0.5">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            5-Day Forecast
+            5-Day Meeting Forecast
           </span>
           <span className="text-xs text-zinc-600">
             Projected calendar load
@@ -130,15 +137,12 @@ export default function ForecastCard({ forecast }: Props) {
 
       {/* Day columns */}
       <div className="flex gap-2">
-        {forecast.map((day, i) => {
-          const date      = new Date(day.date);
-          const dayLabel  = DAY_LABELS[date.getDay()];
-          const dateNum   = date.getDate();
-          const pts       = day.calendarPts;
-          const barHeight = pts > 0 ? Math.max(12, Math.round((pts / maxPts) * 64)) : 4;
-          const textColor = getTextColor(pts);
-          const dotColor  = getDotColor(pts);
-          const loadLabel = getLoadLabel(pts);
+        {slots.map((slot, i) => {
+          const pts      = slot.calendarPts;
+          const dayLabel = DAY_LABELS[slot.date.getDay()];
+          const dateNum  = slot.date.getDate();
+          const barH     = pts > 0 ? Math.max(12, Math.round((pts / maxPts) * 64)) : 4;
+          const label    = getLoadLabel(pts, slot.isRest);
 
           return (
             <div key={i} className="flex flex-col items-center gap-1.5 flex-1">
@@ -146,25 +150,27 @@ export default function ForecastCard({ forecast }: Props) {
               {/* Bar */}
               <div className="flex flex-col justify-end h-16 w-full">
                 <div
-                  className={`w-full rounded-t-sm ${pts > 0 ? dotColor : 'bg-zinc-800'} transition-all`}
-                  style={{ height: `${barHeight}px` }}
+                  className={`w-full rounded-t-sm transition-all ${getBarColor(pts)}`}
+                  style={{ height: `${barH}px` }}
                 />
               </div>
 
-              {/* Day label */}
+              {/* Day */}
               <span className="text-[10px] font-medium text-zinc-500">{dayLabel}</span>
 
               {/* Date */}
               <span className="text-xs font-semibold text-zinc-300">{dateNum}</span>
 
               {/* Load label */}
-              <span className={`text-[9px] font-semibold ${pts > 0 ? textColor : 'text-zinc-700'}`}>
-                {loadLabel}
+              <span className={`text-[9px] font-semibold ${
+                slot.isRest || pts === 0 ? 'text-zinc-600' : getTextColor(pts)
+              }`}>
+                {label}
               </span>
 
-              {/* Pts */}
-              {pts > 0 && (
-                <span className={`text-[9px] tabular-nums ${textColor}`}>
+              {/* Pts — only for days with meetings */}
+              {pts > 0 && !slot.isRest && (
+                <span className={`text-[9px] tabular-nums ${getTextColor(pts)}`}>
                   {pts} pts
                 </span>
               )}
@@ -177,9 +183,7 @@ export default function ForecastCard({ forecast }: Props) {
       {/* Insight line */}
       <div className="flex items-start gap-2 bg-zinc-800 rounded-xl px-3 py-2.5">
         <span className="text-indigo-400 text-xs mt-0.5 flex-shrink-0">→</span>
-        <span className="text-xs text-zinc-300 leading-relaxed">
-          {insight}
-        </span>
+        <span className="text-xs text-zinc-300 leading-relaxed">{insight}</span>
       </div>
 
     </div>
