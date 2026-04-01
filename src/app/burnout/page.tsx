@@ -19,13 +19,11 @@ import Sparkline from '@/components/Sparkline';
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function countConsecutiveHighDays(scores: number[], threshold: number): number {
-  let count = 0;
-  for (let i = scores.length - 1; i >= 0; i--) {
-    if (scores[i] >= threshold) count++;
-    else break;
-  }
-  return count;
+function countHighDaysInWindow(scores: number[], threshold: number, windowSize = 7): number {
+  return scores
+    .slice(-windowSize)
+    .filter(s => s > threshold)
+    .length;
 }
 
 function getCheckInLabel(value: number): string {
@@ -85,7 +83,7 @@ export default function BurnoutPage() {
   const last7Totals = last7.map(s => s.totalScore);
   const rollingAvg  = latest?.rollingAvg7d ?? 0;
 
-  const consecutiveDays = countConsecutiveHighDays(
+  const consecutiveDays = countHighDaysInWindow(
     scores.map(s => s.totalScore),
     BURNOUT_THRESHOLD
   );
@@ -139,7 +137,7 @@ export default function BurnoutPage() {
           <MetricCard
             label="High days"
             value={String(consecutiveDays)}
-            sub="consecutive"
+            sub="last 7 days"
             highlight={consecutiveDays >= 3}
           />
           <MetricCard
