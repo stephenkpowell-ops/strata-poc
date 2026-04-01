@@ -142,7 +142,7 @@ describe('Context-switch multipliers — doctor appointment worked example', () 
     makeEvent({ id: 'w2', tag: 'work', category: 'work',
       startAt: new Date('2025-03-25T10:30:00'), endAt: new Date('2025-03-25T11:30:00') }),
     makeEvent({ id: 'p1', tag: 'personal', category: 'active_personal',
-      startAt: new Date('2025-03-25T12:00:00'), endAt: new Date('2025-03-25T13:00:00') }),
+      startAt: new Date('2025-03-25T11:40:00'), endAt: new Date('2025-03-25T12:40:00') }),
     makeEvent({ id: 'p2', tag: 'personal', category: 'logistical',
       startAt: new Date('2025-03-25T17:30:00'), endAt: new Date('2025-03-25T18:00:00') }),
   ];
