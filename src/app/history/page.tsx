@@ -8,9 +8,10 @@
  * Shows:
  *   - 9-day summary card (avg score, peak day, lowest day, mini sparkline)
  *   - Cumulative load drivers across all 9 days:
- *       Work meetings    — 286 pts (sum of all work event scores)
- *       Active personal  —  49 pts (sum of all active_personal event scores)
+ *       Work meetings    — 286 pts (pre-computed from StressEngine)
+ *       Active personal  —  49 pts (pre-computed from StressEngine)
  *       Check-in total   — sum of fixture check-ins + live today check-in
+ *       Recovery         — −6 pts per completed session (live from store)
  *   - Score history list (most recent first, color-coded)
  */
 
@@ -18,11 +19,7 @@ import { useStrata } from '@/lib/store';
 import Sparkline from '@/components/Sparkline';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// CUMULATIVE CATEGORY TOTALS
-// Pre-computed from StressEngine output for each day's events.
-// Work meetings: sum of all work event scores across Mar 17–25
-// Active personal: sum of all active_personal event scores across Mar 17–25
-// These are fixed for the POC fixture data.
+// CUMULATIVE CATEGORY TOTALS (pre-computed from StressEngine for Mar 17–25)
 // ─────────────────────────────────────────────────────────────────────────────
 
 const CUMULATIVE_WORK_PTS     = 286;
@@ -61,20 +58,6 @@ function getCheckInLabel(value: number): string {
     case 100: return 'Critical';
     default:  return `${value}`;
   }
-}
-
-function getDriverColor(pts: number, max: number): string {
-  const pct = max > 0 ? pts / max : 0;
-  if (pct >= 0.6) return 'text-orange-400';
-  if (pct >= 0.3) return 'text-indigo-400';
-  return 'text-emerald-400';
-}
-
-function getDriverBarColor(pts: number, max: number): string {
-  const pct = max > 0 ? pts / max : 0;
-  if (pct >= 0.6) return 'bg-orange-400';
-  if (pct >= 0.3) return 'bg-indigo-400';
-  return 'bg-emerald-400';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -126,10 +109,10 @@ function SummaryCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DRIVER ROW
+// DRIVER ROW — load (positive pts, orange/indigo/emerald bars)
 // ─────────────────────────────────────────────────────────────────────────────
 
-function DriverRow({
+function LoadDriverRow({
   label,
   pts,
   maxPts,
@@ -138,22 +121,60 @@ function DriverRow({
   pts:    number;
   maxPts: number;
 }) {
-  const barWidth = maxPts > 0 ? `${Math.round((pts / maxPts) * 100)}%` : '0%';
+  const pct      = maxPts > 0 ? pts / maxPts : 0;
+  const color    = pct >= 0.6 ? 'text-orange-400' : pct >= 0.3 ? 'text-indigo-400' : 'text-emerald-400';
+  const barColor = pct >= 0.6 ? 'bg-orange-400'  : pct >= 0.3 ? 'bg-indigo-400'  : 'bg-emerald-400';
+  const barWidth = `${Math.round(pct * 100)}%`;
 
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-sm text-zinc-300">{label}</span>
-        <span className={`text-sm font-semibold tabular-nums ${getDriverColor(pts, maxPts)}`}>
-          +{pts} pts
+        <span className={`text-sm font-semibold tabular-nums ${color}`}>+{pts} pts</span>
+      </div>
+      <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: barWidth }} />
+      </div>
+    </div>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// RECOVERY ROW — reduction (negative pts, always emerald)
+// ─────────────────────────────────────────────────────────────────────────────
+
+function RecoveryDriverRow({
+  sessions,
+  ptsReduced,
+  maxPts,
+}: {
+  sessions:   number;
+  ptsReduced: number;
+  maxPts:     number;
+}) {
+  const barWidth = maxPts > 0 ? `${Math.round((ptsReduced / maxPts) * 100)}%` : '0%';
+  const label    = sessions === 0
+    ? 'Recovery sessions'
+    : `Recovery (${sessions} ${sessions === 1 ? 'session' : 'sessions'})`;
+
+  return (
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-zinc-300">{label}</span>
+        <span className="text-sm font-semibold tabular-nums text-emerald-400">
+          {sessions === 0 ? '—' : `−${ptsReduced} pts`}
         </span>
       </div>
       <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
-        <div
-          className={`h-full rounded-full ${getDriverBarColor(pts, maxPts)}`}
-          style={{ width: barWidth }}
-        />
+        {sessions > 0 && (
+          <div className="h-full rounded-full bg-emerald-400" style={{ width: barWidth }} />
+        )}
       </div>
+      {sessions === 0 && (
+        <span className="text-[10px] text-zinc-600">
+          Complete a Breathing Reset to log recovery
+        </span>
+      )}
     </div>
   );
 }
@@ -165,21 +186,25 @@ function DriverRow({
 function CumulativeDriversCard({
   scores,
   checkInValue,
+  completedSessions,
+  recoveryPtsTotal,
 }: {
-  scores:       { checkInValue: number }[];
-  checkInValue: number;
+  scores:            { checkInValue: number }[];
+  checkInValue:      number;
+  completedSessions: number;
+  recoveryPtsTotal:  number;
 }) {
   // Cumulative check-in: fixture values for days 0–7 + live value for today
   const totalCheckIn = scores.slice(0, -1).reduce((sum, s) => sum + s.checkInValue, 0)
     + checkInValue;
 
-  const drivers = [
+  const loadDrivers = [
     { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS     },
     { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS },
     { label: 'Check-in total',  pts: totalCheckIn            },
   ];
 
-  const maxPts = Math.max(...drivers.map(d => d.pts));
+  const maxLoadPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal);
 
   return (
     <div className="flex flex-col gap-3 bg-zinc-900 rounded-2xl p-5">
@@ -189,15 +214,25 @@ function CumulativeDriversCard({
         </span>
         <span className="text-xs text-zinc-600">Mar 17 – Mar 25 · total pts contributed</span>
       </div>
+
       <div className="flex flex-col gap-3">
-        {drivers.map((driver, i) => (
-          <DriverRow
+        {loadDrivers.map((driver, i) => (
+          <LoadDriverRow
             key={i}
             label={driver.label}
             pts={driver.pts}
-            maxPts={maxPts}
+            maxPts={maxLoadPts}
           />
         ))}
+
+        {/* Divider before recovery row */}
+        <div className="border-t border-zinc-800 pt-1" />
+
+        <RecoveryDriverRow
+          sessions={completedSessions}
+          ptsReduced={recoveryPtsTotal}
+          maxPts={maxLoadPts}
+        />
       </div>
     </div>
   );
@@ -228,18 +263,12 @@ function ScoreRow({
     <div className={`flex items-center gap-3 px-4 py-3 rounded-xl border ${
       isLatest ? 'bg-zinc-800 border-zinc-700' : 'bg-zinc-900 border-zinc-800'
     }`}>
-
-      {/* Date */}
       <div className="flex flex-col min-w-[72px]">
-        <span className="text-xs font-medium text-zinc-300">
-          {formatDate(date)}
-        </span>
+        <span className="text-xs font-medium text-zinc-300">{formatDate(date)}</span>
         {isLatest && (
           <span className="text-[10px] text-indigo-400 font-semibold">Today</span>
         )}
       </div>
-
-      {/* Bar */}
       <div className="flex-1 flex flex-col gap-1">
         <div className="h-1.5 w-full bg-zinc-700 rounded-full overflow-hidden">
           <div
@@ -255,17 +284,10 @@ function ScoreRow({
           <span className="text-[10px] text-zinc-600">Check-in {checkLabel}</span>
         </div>
       </div>
-
-      {/* Score + label */}
       <div className="flex flex-col items-end gap-0.5 min-w-[56px]">
-        <span className={`text-base font-bold tabular-nums ${scoreColor}`}>
-          {totalScore}
-        </span>
-        <span className={`text-[10px] font-medium ${scoreColor}`}>
-          {label}
-        </span>
+        <span className={`text-base font-bold tabular-nums ${scoreColor}`}>{totalScore}</span>
+        <span className={`text-[10px] font-medium ${scoreColor}`}>{label}</span>
       </div>
-
     </div>
   );
 }
@@ -275,37 +297,33 @@ function ScoreRow({
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HistoryPage() {
-  const { scores, checkInValue } = useStrata();
+  const { scores, checkInValue, completedSessions, recoveryPtsTotal } = useStrata();
 
   const sortedScores = [...scores].reverse();
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
 
-      {/* Header */}
       <div className="flex items-center justify-between px-6 pt-12 pb-4">
         <div className="flex flex-col">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
             Strata
           </span>
-          <span className="text-xl font-bold text-white">
-            History
-          </span>
+          <span className="text-xl font-bold text-white">History</span>
         </div>
       </div>
 
       <div className="flex flex-col gap-4 px-6 pb-8">
 
-        {/* 9-day summary */}
         <SummaryCard scores={scores} />
 
-        {/* Cumulative load drivers */}
         <CumulativeDriversCard
           scores={scores}
           checkInValue={checkInValue}
+          completedSessions={completedSessions}
+          recoveryPtsTotal={recoveryPtsTotal}
         />
 
-        {/* Score history list */}
         <div className="flex flex-col gap-2">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500 px-1">
             Score history
