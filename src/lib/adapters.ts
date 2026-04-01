@@ -19,6 +19,7 @@
 
 import type {
   UserId,
+  CohortId,
   TierName,
   CalendarSource,
   CalendarEvent,
