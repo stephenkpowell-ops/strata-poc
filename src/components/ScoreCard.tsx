@@ -7,16 +7,19 @@
  *
  * Displays:
  *   - Large total score number, color-coded by severity
- *   - Status label (Managing · Elevated · High Load)
- *   - "7-day trend" label above the sparkline
- *   - Sparkline showing the last 7 scores with threshold line
+ *   - Status label (Managing · Elevated · High Load · Critical)
  *   - Score breakdown: Calendar pts + Check-in = Total
+ *     When checkInValue + calendarPts > 100, the total displays in red
+ *     (matching the Critical check-in option border color) to signal
+ *     the score has been capped at 100.
+ *   - 7-day sparkline with threshold line
  *   - Rolling 7-day average
  *
  * Color coding by totalScore:
  *   green  (< 50)  — Managing
- *   amber  (50–74) — Elevated
+ *   indigo (50–74) — Elevated
  *   orange (>= 75) — High Load
+ *   red    (capped) — score would exceed 100
  *
  * Usage:
  *   <ScoreCard
@@ -46,21 +49,24 @@ interface Props {
 // HELPERS
 // ─────────────────────────────────────────────────────────────────────────────
 
-function getScoreColor(score: number): string {
-  if (score >= 75) return 'text-orange-400';
-  if (score >= 50) return 'text-indigo-400';
+function getScoreColor(score: number, capped: boolean): string {
+  if (capped)       return 'text-red-500';
+  if (score >= 75)  return 'text-orange-400';
+  if (score >= 50)  return 'text-indigo-400';
   return 'text-emerald-400';
 }
 
-function getStatusLabel(score: number): string {
-  if (score >= 75) return 'High Load';
-  if (score >= 50) return 'Elevated';
+function getStatusLabel(score: number, capped: boolean): string {
+  if (capped)       return 'Critical';
+  if (score >= 75)  return 'High Load';
+  if (score >= 50)  return 'Elevated';
   return 'Managing';
 }
 
-function getStatusBadgeStyle(score: number): string {
-  if (score >= 75) return 'bg-orange-950 text-orange-400 border border-orange-800';
-  if (score >= 50) return 'bg-indigo-950 text-indigo-400 border border-indigo-800';
+function getStatusBadgeStyle(score: number, capped: boolean): string {
+  if (capped)       return 'bg-red-950 text-red-500 border border-red-500';
+  if (score >= 75)  return 'bg-orange-950 text-orange-400 border border-orange-800';
+  if (score >= 50)  return 'bg-indigo-950 text-indigo-400 border border-indigo-800';
   return 'bg-emerald-950 text-emerald-400 border border-emerald-800';
 }
 
@@ -81,9 +87,12 @@ export default function ScoreCard({
   rollingAvg,
   recentScores,
 }: Props) {
-  const scoreColor  = getScoreColor(currentScore);
-  const statusLabel = getStatusLabel(currentScore);
-  const statusBadge = getStatusBadgeStyle(currentScore);
+  // Cap detection — true when the raw sum exceeds 100
+  const isCapped    = checkInValue + calendarPts > 100;
+
+  const scoreColor  = getScoreColor(currentScore, isCapped);
+  const statusLabel = getStatusLabel(currentScore, isCapped);
+  const statusBadge = getStatusBadgeStyle(currentScore, isCapped);
   const avgColor    = getAvgColor(rollingAvg);
 
   return (
@@ -114,6 +123,7 @@ export default function ScoreCard({
 
       {/* Score breakdown */}
       <div className="flex items-center gap-2 bg-zinc-800 rounded-xl px-4 py-3">
+
         {/* Calendar pts */}
         <div className="flex flex-col items-center flex-1">
           <span className="text-xs text-zinc-500">Calendar</span>
@@ -122,7 +132,6 @@ export default function ScoreCard({
           </span>
         </div>
 
-        {/* Plus sign */}
         <span className="text-zinc-600 text-lg font-light">+</span>
 
         {/* Check-in */}
@@ -133,17 +142,26 @@ export default function ScoreCard({
           </span>
         </div>
 
-        {/* Equals sign */}
         <span className="text-zinc-600 text-lg font-light">=</span>
 
-        {/* Total */}
+        {/* Total — red when capped */}
         <div className="flex flex-col items-center flex-1">
-          <span className="text-xs text-zinc-500">Total</span>
+          <span className="text-xs text-zinc-500">
+            Total{isCapped ? ' (capped)' : ''}
+          </span>
           <span className={`text-base font-bold tabular-nums ${scoreColor}`}>
             {currentScore}
           </span>
         </div>
+
       </div>
+
+      {/* Capped notice */}
+      {isCapped && (
+        <p className="text-xs text-red-500 text-center -mt-1">
+          Raw score {checkInValue + calendarPts} — capped at 100
+        </p>
+      )}
 
       {/* Sparkline */}
       <div className="flex flex-col gap-1">
