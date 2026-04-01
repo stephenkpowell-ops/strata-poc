@@ -5,16 +5,16 @@
  *
  * Daily check-in card for the home screen.
  *
- * Displays a 5-option tap-to-select stress level picker independent
- * of calendar load. The selected value updates the store and
- * recalculates the total score immediately.
+ * Five tap-to-select options representing self-reported stress level,
+ * independent of calendar load:
  *
- * Options map to 0-100 scale:
- *   Low       →  0
- *   Moderate  → 25
- *   High      → 50
- *   Very High → 75
- *   Critical  → 100
+ *   Zero      →   0  — grey dot
+ *   Low       →  25  — green dot
+ *   Moderate  →  50  — indigo dot
+ *   High      →  75  — orange dot
+ *   Critical  → 100  — red dot
+ *
+ * Selecting an option updates the store and recalculates totalScore live.
  *
  * Usage:
  *   <CheckInCard
@@ -37,11 +37,11 @@ interface Props {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const OPTIONS = [
-  { label: 'Low',       value: 0,   color: 'bg-emerald-500', textColor: 'text-emerald-400', borderColor: 'border-emerald-500' },
-  { label: 'Moderate',  value: 25,  color: 'bg-emerald-400', textColor: 'text-emerald-300', borderColor: 'border-emerald-400' },
-  { label: 'High',      value: 50,  color: 'bg-indigo-400',  textColor: 'text-indigo-300',  borderColor: 'border-indigo-400'  },
-  { label: 'Very High', value: 75,  color: 'bg-orange-400',  textColor: 'text-orange-300',  borderColor: 'border-orange-400'  },
-  { label: 'Critical',  value: 100, color: 'bg-red-500',     textColor: 'text-red-400',     borderColor: 'border-red-500'     },
+  { label: 'Zero',     value: 0,   dotColor: 'bg-zinc-500',    textColor: 'text-zinc-400',    borderColor: 'border-zinc-500'    },
+  { label: 'Low',      value: 25,  dotColor: 'bg-emerald-500', textColor: 'text-emerald-400', borderColor: 'border-emerald-500' },
+  { label: 'Moderate', value: 50,  dotColor: 'bg-indigo-400',  textColor: 'text-indigo-300',  borderColor: 'border-indigo-400'  },
+  { label: 'High',     value: 75,  dotColor: 'bg-orange-400',  textColor: 'text-orange-300',  borderColor: 'border-orange-400'  },
+  { label: 'Critical', value: 100, dotColor: 'bg-red-500',     textColor: 'text-red-400',     borderColor: 'border-red-500'     },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -91,7 +91,7 @@ export default function CheckInCard({ currentValue, onSelect }: Props) {
               }`}
             >
               {/* Color dot */}
-              <div className={`w-2.5 h-2.5 rounded-full ${option.color} ${
+              <div className={`w-2.5 h-2.5 rounded-full ${option.dotColor} ${
                 isSelected ? 'opacity-100' : 'opacity-40'
               }`} />
               {/* Label */}
