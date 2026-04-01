@@ -52,20 +52,21 @@ function getDotColor(pts: number): string {
   return 'bg-emerald-400';
 }
 
-function isToday(date: Date): boolean {
-  return (
-    new Date(date).getFullYear() === TODAY.getFullYear() &&
-    new Date(date).getMonth()    === TODAY.getMonth()    &&
-    new Date(date).getDate()     === TODAY.getDate()
-  );
+const TODAY_START = new Date('2025-03-25T00:00:00').getTime();
+const TODAY_END   = new Date('2025-03-25T23:59:59').getTime();
+
+function isToday(date: Date | string): boolean {
+  const d = new Date(date);
+  const t = d.getTime();
+  return t >= TODAY_START && t <= TODAY_END;
 }
 
-function isPast(date: Date): boolean {
-  return new Date(date).getTime() < TODAY.setHours(0, 0, 0, 0);
+function isPast(date: Date | string): boolean {
+  return new Date(date).getTime() < TODAY_START;
 }
 
-function isFuture(date: Date): boolean {
-  return new Date(date).getTime() > TODAY.setHours(23, 59, 59, 999);
+function isFuture(date: Date | string): boolean {
+  return new Date(date).getTime() > TODAY_END;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -78,9 +79,9 @@ export default function DayStrip({ scores, selectedIndex, onSelectDay }: Props) 
       {scores.map((score, i) => {
         const date       = new Date(score.date);
         const isSelected = i === selectedIndex;
-        const today      = isToday(date);
-        const past       = isPast(date);
-        const future     = isFuture(date);
+        const today      = isToday(score.date);
+        const past       = isPast(score.date);
+        const future     = isFuture(score.date);
 
         return (
           <button
