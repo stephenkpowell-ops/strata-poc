@@ -23,7 +23,7 @@ import type {
   CalendarSource,
   CalendarEvent,
   UpsertCalendarEventInput,
-} from './types';
+} from './interfaces/types';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BILLING ADAPTER
