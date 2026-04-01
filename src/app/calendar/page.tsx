@@ -5,16 +5,12 @@
  *
  * Calendar screen — the core differentiator of the Strata POC.
  *
- * Current state (Step 14 — event detail tap-through):
- *   - DayStrip renders across the top with colour-coded stress dots
- *   - Selecting a day filters events to that day and renders them
- *     in time order via EventRow
- *   - GapIndicator is rendered between consecutive events
- *   - Tapping an EventRow opens the EventDetail slide-up panel
- *     showing the full stress breakdown for that event
- *   - Tapping the backdrop or close button dismisses the panel
- *
- * Steps 10–14 are now complete.
+ * Current state (Steps 10–14 + daily stress summary):
+ *   - DayStrip renders across the top with color-coded stress dots
+ *   - Daily stress summary bar shows total calendar pts for the selected day
+ *   - Timeline events list with color-coded EventRow components
+ *   - GapIndicator between consecutive events
+ *   - EventDetail slide-up panel on event tap
  */
 
 import { useState } from 'react';
@@ -23,8 +19,6 @@ import DayStrip from '@/components/DayStrip';
 import EventRow from '@/components/EventRow';
 import GapIndicator from '@/components/GapIndicator';
 import EventDetail from '@/components/EventDetail';
-import { CalendarEvent } from '@/lib/interfaces/types';
-import { ScoredEvent } from '@/lib/StressEngine';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -42,6 +36,59 @@ function minutesBetween(endAt: Date, startAt: Date): number {
   return Math.round((startAt.getTime() - endAt.getTime()) / 60_000);
 }
 
+function getStressColor(pts: number): string {
+  if (pts >= 75) return 'text-orange-400';
+  if (pts >= 40) return 'text-indigo-400';
+  return 'text-emerald-400';
+}
+
+function getStressLabel(pts: number): string {
+  if (pts >= 75) return 'High load day';
+  if (pts >= 40) return 'Elevated load';
+  return 'Light day';
+}
+
+function getStressBg(pts: number): string {
+  if (pts >= 75) return 'bg-orange-950 border-orange-900';
+  if (pts >= 40) return 'bg-indigo-950 border-indigo-900';
+  return 'bg-emerald-950 border-emerald-900';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DAILY STRESS SUMMARY BAR
+// ─────────────────────────────────────────────────────────────────────────────
+
+function DailyStressSummary({
+  calendarPts,
+  eventCount,
+}: {
+  calendarPts: number;
+  eventCount:  number;
+}) {
+  const color = getStressColor(calendarPts);
+  const label = getStressLabel(calendarPts);
+  const bg    = getStressBg(calendarPts);
+
+  return (
+    <div className={`flex items-center justify-between px-4 py-3 border-b ${bg}`}>
+      <div className="flex items-center gap-2">
+        <span className={`text-xs font-semibold uppercase tracking-wider ${color}`}>
+          {label}
+        </span>
+        <span className="text-zinc-600 text-xs">
+          · {eventCount} {eventCount === 1 ? 'event' : 'events'}
+        </span>
+      </div>
+      <div className="flex items-center gap-1">
+        <span className="text-xs text-zinc-500">Meeting load</span>
+        <span className={`text-sm font-bold tabular-nums ${color}`}>
+          +{calendarPts} pts
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,7 +99,7 @@ export default function CalendarPage() {
   // Selected day tab
   const [selectedIndex, setSelectedIndex] = useState(scores.length - 1);
 
-  // Selected event for the detail panel — null means panel is closed
+  // Selected event for the detail panel
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
   // The date of the selected day tab
@@ -68,9 +115,18 @@ export default function CalendarPage() {
     dailyResult.scoredEvents.map(s => [s.eventId, s])
   );
 
+  // Total calendar pts for the selected day
+  // For the day with events (March 25), use live StressEngine output.
+  // For other days, use the stored calendarPts from FIXTURE_SCORES.
+  const selectedScore    = scores[selectedIndex];
+  const isLiveScoredDay  = dayEvents.length > 0;
+  const calendarPtsToday = isLiveScoredDay
+    ? dailyResult.calendarPts
+    : selectedScore?.calendarPts ?? 0;
+
   // Resolve the selected event and its score for the detail panel
-  const selectedEvent    = selectedEventId ? events.find(e => e.id === selectedEventId) ?? null : null;
-  const selectedScored   = selectedEventId ? scoredEventMap.get(selectedEventId) ?? null : null;
+  const selectedEvent  = selectedEventId ? events.find(e => e.id === selectedEventId) ?? null : null;
+  const selectedScored = selectedEventId ? scoredEventMap.get(selectedEventId) ?? null : null;
 
   return (
     <div className="flex flex-col min-h-screen bg-zinc-950 text-white">
@@ -81,8 +137,14 @@ export default function CalendarPage() {
         selectedIndex={selectedIndex}
         onSelectDay={(i) => {
           setSelectedIndex(i);
-          setSelectedEventId(null); // close detail panel when switching days
+          setSelectedEventId(null);
         }}
+      />
+
+      {/* Daily stress summary bar */}
+      <DailyStressSummary
+        calendarPts={calendarPtsToday}
+        eventCount={dayEvents.length}
       />
 
       {/* Timeline — steps 11, 12, 13 */}
@@ -97,7 +159,7 @@ export default function CalendarPage() {
             const scoredEvent = scoredEventMap.get(event.id);
             if (!scoredEvent) return null;
 
-            const nextEvent = dayEvents[i + 1];
+            const nextEvent  = dayEvents[i + 1];
             const gapMinutes = nextEvent
               ? minutesBetween(new Date(event.endAt), new Date(nextEvent.startAt))
               : null;
