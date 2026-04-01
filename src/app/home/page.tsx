@@ -88,59 +88,85 @@ function TrialProgressBar({
 // This keeps the banner visible during recovery after a high-load week.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function BurnoutAlertBanner({
+function PerformanceStatusCard({
   peakRollingAvg,
   currentRollingAvg,
 }: {
   peakRollingAvg:    number;
   currentRollingAvg: number;
 }) {
-  if (peakRollingAvg <= BURNOUT_THRESHOLD) return null;
+  // State 1 — Active burnout alert
+  if (peakRollingAvg > BURNOUT_THRESHOLD && currentRollingAvg > BURNOUT_THRESHOLD) {
+    return (
+      <Link href="/burnout" className="flex items-start gap-3 bg-amber-950 border border-amber-800 rounded-2xl p-4 hover:bg-amber-900 transition-colors">
+        <div className="relative flex-shrink-0 mt-0.5">
+          <span className="flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
+          </span>
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">Performance Degradation Alert</span>
+          <span className="text-sm text-amber-200 leading-snug">Your recovery rate hasn&#39;t kept up with load. The window to correct it is now.</span>
+          <span className="text-xs text-amber-600 mt-0.5">Peak 7-day avg {peakRollingAvg} · current {currentRollingAvg} · threshold {BURNOUT_THRESHOLD} · Tap for details →</span>
+        </div>
+      </Link>
+    );
+  }
 
-  const isRecovering = currentRollingAvg <= BURNOUT_THRESHOLD;
+  // State 2 — Recovering (peak was high, now coming down)
+  if (peakRollingAvg > BURNOUT_THRESHOLD && currentRollingAvg <= BURNOUT_THRESHOLD) {
+    return (
+      <Link href="/burnout" className="flex items-start gap-3 bg-zinc-900 border border-zinc-700 rounded-2xl p-4 hover:bg-zinc-800 transition-colors">
+        <div className="relative flex-shrink-0 mt-0.5">
+          <span className="flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-zinc-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-zinc-400" />
+          </span>
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-zinc-400">Recovery In Progress</span>
+          <span className="text-sm text-zinc-300 leading-snug">Your rolling average is recovering. Keep the sessions consistent.</span>
+          <span className="text-xs text-zinc-600 mt-0.5">Peak 7-day avg {peakRollingAvg} · current {currentRollingAvg} · Tap to review →</span>
+        </div>
+      </Link>
+    );
+  }
 
+  // State 3 — Elevated, watch zone (55–70)
+  if (peakRollingAvg > 55) {
+    return (
+      <Link href="/recovery" className="flex items-start gap-3 bg-indigo-950 border border-indigo-800 rounded-2xl p-4 hover:bg-indigo-900 transition-colors">
+        <div className="relative flex-shrink-0 mt-0.5">
+          <span className="flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-indigo-400" />
+          </span>
+        </div>
+        <div className="flex flex-col gap-1 flex-1">
+          <span className="text-xs font-semibold uppercase tracking-wider text-indigo-400">Load Elevated</span>
+          <span className="text-sm text-indigo-200 leading-snug">Your load is elevated. A recovery session now prevents a bigger problem later.</span>
+          <span className="text-xs text-indigo-600 mt-0.5">7-day avg {currentRollingAvg} · Start a session →</span>
+        </div>
+      </Link>
+    );
+  }
+
+  // State 4 — Managing well (≤ 55)
   return (
-    <Link
-      href="/burnout"
-      className={`flex items-start gap-3 border rounded-2xl p-4 transition-colors ${
-        isRecovering
-          ? 'bg-zinc-900 border-zinc-700 hover:bg-zinc-800'
-          : 'bg-amber-950 border-amber-800 hover:bg-amber-900'
-      }`}
-    >
+    <Link href="/recovery" className="flex items-start gap-3 bg-emerald-950 border border-emerald-800 rounded-2xl p-4 hover:bg-emerald-900 transition-colors">
       <div className="relative flex-shrink-0 mt-0.5">
-        <span className="flex h-2.5 w-2.5">
-          <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-75 ${
-            isRecovering ? 'bg-zinc-400' : 'bg-amber-400'
-          }`} />
-          <span className={`relative inline-flex rounded-full h-2.5 w-2.5 ${
-            isRecovering ? 'bg-zinc-400' : 'bg-amber-400'
-          }`} />
-        </span>
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-400" />
       </div>
       <div className="flex flex-col gap-1 flex-1">
-        <span className={`text-xs font-semibold uppercase tracking-wider ${
-          isRecovering ? 'text-zinc-400' : 'text-amber-400'
-        }`}>
-          {isRecovering ? 'Recovery In Progress' : 'Performance Degradation Alert'}
-        </span>
-        <span className={`text-sm leading-snug ${
-          isRecovering ? 'text-zinc-300' : 'text-amber-200'
-        }`}>
-          {isRecovering
-            ? 'Your rolling average is recovering. Keep the recovery sessions going.'
-            : "Your recovery rate hasn\u2019t kept up with load. The window to correct it is now."
-          }
-        </span>
-        <span className={`text-xs mt-0.5 ${
-          isRecovering ? 'text-zinc-600' : 'text-amber-600'
-        }`}>
-          Peak 7-day avg {peakRollingAvg} · current {currentRollingAvg} · threshold {BURNOUT_THRESHOLD} · Tap for details →
-        </span>
+        <span className="text-xs font-semibold uppercase tracking-wider text-emerald-400">Managing Well</span>
+        <span className="text-sm text-emerald-200 leading-snug">You&#39;re managing your load well. Keep the recovery sessions consistent.</span>
+        <span className="text-xs text-emerald-700 mt-0.5">7-day avg {currentRollingAvg} · Maintain with a session →</span>
       </div>
     </Link>
   );
 }
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PAGE
@@ -195,7 +221,7 @@ export default function HomePage() {
 
         <ForecastCard forecastScores={forecastScores} />
 
-        <BurnoutAlertBanner
+        <PerformanceStatusCard
           peakRollingAvg={peakRollingAvg}
           currentRollingAvg={currentRollingAvg}
         />
