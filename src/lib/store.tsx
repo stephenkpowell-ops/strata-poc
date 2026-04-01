@@ -5,20 +5,16 @@
  *
  * Client-side data store for the Strata POC.
  *
- * Key fix: computeDailyScore is called with only today's events (March 25)
- * not all fixture events. This ensures dailyResult.scoredEvents and
- * dailyResult.topDrivers reflect today's load only, not the whole period.
+ * Recovery session tracking has two separate counters:
+ *   todaySessions    — sessions completed today (Mar 25), starts at 0
+ *   todayRecoveryPts — pts reduced today (6 per session), starts at 0
+ *   completedSessions  — total sessions across all 9 days (pre-seeded at 4
+ *                        for Mar 17–24, increments with today's sessions)
+ *   recoveryPtsTotal   — total pts reduced across all 9 days (pre-seeded
+ *                        at 24, increments with today's sessions)
  *
- * State:
- *   - checkInValue:      mutable daily check-in (default 0 / Zero)
- *   - completedSessions: count of breathing reset sessions (pre-seeded at 4)
- *   - recoveryPtsTotal:  cumulative pts reduced (pre-seeded at 24 — 4 × −6 pts)
- *
- * Read-only:
- *   - scores:         historical score records (score_0 through score_8, Mar 17–25)
- *   - forecastScores: forecast score records (score_9 through score_11, Mar 26–28)
- *   - events:         all fixture events (all days — used by calendar screen)
- *   - todayEvents:    only March 25 events (used by dailyResult scoring)
+ * The burnout page uses todaySessions / todayRecoveryPts.
+ * The history page uses completedSessions / recoveryPtsTotal.
  */
 
 import { createContext, useContext, useState, ReactNode } from 'react';
@@ -27,15 +23,13 @@ import type { DailyScoreResult } from './StressEngine';
 import type { User, StressScore, CalendarEvent } from './interfaces/types';
 import { FIXTURE_USER, FIXTURE_SCORES, FIXTURE_EVENTS } from './mocks';
 
-const RECOVERY_PTS_PER_SESSION   = 6;
-const FIXTURE_COMPLETED_SESSIONS = 4;
-const FIXTURE_RECOVERY_PTS       = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION;
-const HISTORY_COUNT              = 9;
+const RECOVERY_PTS_PER_SESSION    = 6;
+const FIXTURE_COMPLETED_SESSIONS  = 4;   // pre-seeded for Mar 17–24
+const FIXTURE_RECOVERY_PTS        = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION;
+const HISTORY_COUNT               = 9;
 
-// Today's date for the POC
 const TODAY = new Date('2025-03-25T12:00:00');
 
-// Filter events to today only for accurate daily scoring
 const TODAY_EVENTS: CalendarEvent[] = FIXTURE_EVENTS.filter(e => {
   const d = new Date(e.startAt);
   return (
@@ -57,8 +51,14 @@ interface StrataState {
   dailyResult:        DailyScoreResult;
   checkInValue:       number;
   setCheckIn:         (value: number) => void;
+  // Today only (Mar 25) — used by burnout page
+  todaySessions:      number;
+  todayRecoveryPts:   number;
+  // All-time cumulative — used by history page
   completedSessions:  number;
   recoveryPtsTotal:   number;
+  todaySessions:      number;
+  todayRecoveryPts:   number;
   logRecoverySession: () => void;
 }
 
@@ -74,14 +74,16 @@ const StrataContext = createContext<StrataState | null>(null);
 
 export function StrataProvider({ children }: { children: ReactNode }) {
   const [checkInValue,      setCheckInValue]      = useState<number>(0);
+  // Today's sessions start at 0
+  const [todaySessions,     setTodaySessions]     = useState<number>(0);
+  const [todayRecoveryPts,  setTodayRecoveryPts]  = useState<number>(0);
+  // Historical total pre-seeded at 4 sessions / 24 pts
   const [completedSessions, setCompletedSessions] = useState<number>(FIXTURE_COMPLETED_SESSIONS);
   const [recoveryPtsTotal,  setRecoveryPtsTotal]  = useState<number>(FIXTURE_RECOVERY_PTS);
 
   const historicalFixture = FIXTURE_SCORES.slice(0, HISTORY_COUNT);
   const forecastFixture   = FIXTURE_SCORES.slice(HISTORY_COUNT);
 
-  // Score only today's events — dailyResult.totalScore uses the
-  // Option A multiplier model from StressEngine
   const dailyResult: DailyScoreResult = computeDailyScore({
     events:        TODAY_EVENTS,
     calendarPrefs: [
@@ -90,7 +92,6 @@ export function StrataProvider({ children }: { children: ReactNode }) {
     checkInValue,
   });
 
-  // Update today's score record with live check-in and multiplier-based totalScore
   const scores: StressScore[] = historicalFixture.map((s, i) => {
     if (i !== historicalFixture.length - 1) return s;
     return {
@@ -100,8 +101,11 @@ export function StrataProvider({ children }: { children: ReactNode }) {
     };
   });
 
-  const setCheckIn         = (value: number) => setCheckInValue(value);
+  const setCheckIn = (value: number) => setCheckInValue(value);
+
   const logRecoverySession = () => {
+    setTodaySessions(prev => prev + 1);
+    setTodayRecoveryPts(prev => prev + RECOVERY_PTS_PER_SESSION);
     setCompletedSessions(prev => prev + 1);
     setRecoveryPtsTotal(prev => prev + RECOVERY_PTS_PER_SESSION);
   };
@@ -114,8 +118,12 @@ export function StrataProvider({ children }: { children: ReactNode }) {
     dailyResult,
     checkInValue,
     setCheckIn,
+    todaySessions,
+    todayRecoveryPts,
     completedSessions,
     recoveryPtsTotal,
+    todaySessions,
+    todayRecoveryPts,
     logRecoverySession,
   };
 

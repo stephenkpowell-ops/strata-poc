@@ -6,7 +6,8 @@
  * Burnout Alert Screen — steps 19, 20, 21, 22.
  *
  * Updates:
- *   - "Sessions this week" reads from store.completedSessions (live)
+ *   - "Sessions" metric card reads from store.completedSessions (last 7 days total)
+ *   - Recovery row in load drivers reads from store.todayRecoveryPts (today only, starts at 0)
  *   - "TOP LOAD DRIVERS" renamed to "TODAY'S LOAD DRIVERS"
  *   - Check-in row added to load drivers showing today's check-in value
  */
@@ -65,7 +66,7 @@ function MetricCard({
 const BURNOUT_THRESHOLD = 70;
 
 export default function BurnoutPage() {
-  const { scores, completedSessions, checkInValue, dailyResult } = useStrata();
+  const { scores, completedSessions, todaySessions, todayRecoveryPts, checkInValue, dailyResult } = useStrata();
 
   const latest              = scores[scores.length - 1];
   const calendarPtsToday    = latest?.calendarPts ?? 0;
@@ -175,13 +176,13 @@ export default function BurnoutPage() {
             <div className="flex flex-col gap-1">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-zinc-300">Work meetings</span>
-                <span className="text-sm font-semibold text-orange-400">
+                <span className="text-sm font-semibold text-indigo-400">
                   +{workPts} pts
                 </span>
               </div>
               <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-orange-400 rounded-full"
+                  className="h-full bg-indigo-400 rounded-full"
                   style={{ width: `${Math.round((workPts / maxDriver) * 100)}%` }}
                 />
               </div>
@@ -213,13 +214,13 @@ export default function BurnoutPage() {
                     Check-in
                     <span className="text-zinc-600 text-xs ml-1.5">(×0.5 weight)</span>
                   </span>
-                  <span className="text-sm font-semibold text-indigo-400">
+                  <span className="text-sm font-semibold text-zinc-400">
                     +{checkInContribution} pts
                   </span>
                 </div>
                 <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-indigo-400 rounded-full"
+                    className="h-full bg-zinc-500 rounded-full"
                     style={{ width: `${Math.round((checkInContribution / maxDriver) * 100)}%` }}
                   />
                 </div>
@@ -231,6 +232,34 @@ export default function BurnoutPage() {
                 <span className="text-xs text-zinc-600">— not logged</span>
               </div>
             )}
+
+            {/* Recovery — today's sessions */}
+            <div className="flex flex-col gap-1">
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-zinc-300">
+                  Recovery
+                  {todaySessions > 0 && (
+                    <span className="text-zinc-600 text-xs ml-1.5">({todaySessions} {todaySessions === 1 ? 'session' : 'sessions'} today)</span>
+                  )}
+                </span>
+                <span className="text-sm font-semibold text-emerald-400">
+                  {todayRecoveryPts > 0 ? `−${todayRecoveryPts} pts` : '—'}
+                </span>
+              </div>
+              <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
+                {todayRecoveryPts > 0 && (
+                  <div
+                    className="h-full bg-emerald-400 rounded-full"
+                    style={{ width: `${Math.round((todayRecoveryPts / maxDriver) * 100)}%` }}
+                  />
+                )}
+              </div>
+              {todayRecoveryPts === 0 && (
+                <span className="text-[10px] text-zinc-600">
+                  Complete a Breathing Reset to reduce today&#39;s load
+                </span>
+              )}
+            </div>
 
             {/* Total stress for today */}
             <div className="flex flex-col gap-1 pt-1 border-t border-zinc-800">
@@ -253,7 +282,7 @@ export default function BurnoutPage() {
                 />
               </div>
               <p className="text-[10px] text-zinc-600">
-                {workPts} work + {personalPts} personal + {checkInContribution} check-in = {todayTotal} pts
+                {workPts} work + {personalPts} personal + {checkInContribution} check-in − {todayRecoveryPts} recovery = {Math.max(0, todayTotal - todayRecoveryPts)} pts
               </p>
             </div>
 
