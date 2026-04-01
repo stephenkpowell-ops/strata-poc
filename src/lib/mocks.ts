@@ -65,13 +65,13 @@ export const FIXTURE_USER: User = {
 export const FIXTURE_SCORES: StressScore[] = [
   { id: 'score_0', userId: FIXTURE_USER.id, date: new Date('2025-03-17T12:00:00'), checkInValue: 42, calendarPts: 44, totalScore: 86,  rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_1', userId: FIXTURE_USER.id, date: new Date('2025-03-18T12:00:00'), checkInValue: 52, calendarPts: 48, totalScore: 100, rollingAvg7d: 93, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 35, calendarPts: 88, totalScore: 100, rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 55, calendarPts: 62, totalScore: 100, rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 40, calendarPts: 31, totalScore: 71,  rollingAvg7d: 83, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 48, calendarPts: 18, totalScore: 66,  rollingAvg7d: 80, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 38, calendarPts: 14, totalScore: 52,  rollingAvg7d: 76, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 44, calendarPts: 22, totalScore: 66,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 58, calendarPts: 28, totalScore: 86,  rollingAvg7d: 71, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 35, calendarPts: 88, totalScore: 100, rollingAvg7d: 95, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 55, calendarPts: 62, totalScore: 100, rollingAvg7d: 97, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 40, calendarPts: 31, totalScore: 71,  rollingAvg7d: 91, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 32, calendarPts: 0,  totalScore: 32,  rollingAvg7d: 82, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 0,  totalScore: 25,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 44, calendarPts: 22, totalScore: 66,  rollingAvg7d: 71, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 58, calendarPts: 28, totalScore: 86,  rollingAvg7d: 69, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
