@@ -102,7 +102,7 @@ export default function ScoreCard({
       <div className="flex items-start justify-between">
         <div className="flex flex-col gap-1">
           <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">
-            Stress Load
+            Daily Stress Load
           </span>
           <span className="text-xs text-zinc-500">
             Today

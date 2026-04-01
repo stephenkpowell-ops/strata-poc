@@ -69,9 +69,9 @@ export const FIXTURE_SCORES: StressScore[] = [
   { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 50, calendarPts: 64, totalScore: 100, rollingAvg7d: 93, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 25, calendarPts: 33, totalScore: 58,  rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 50, calendarPts: 0,  totalScore: 50,  rollingAvg7d: 80, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 0,  totalScore: 25,  rollingAvg7d: 72, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 50, calendarPts: 22, totalScore: 72,  rollingAvg7d: 72, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 50, calendarPts: 30, totalScore: 80,  rollingAvg7d: 69, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_6', userId: FIXTURE_USER.id, date: new Date('2025-03-23T12:00:00'), checkInValue: 25, calendarPts: 9,  totalScore: 34,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_7', userId: FIXTURE_USER.id, date: new Date('2025-03-24T12:00:00'), checkInValue: 50, calendarPts: 22, totalScore: 72,  rollingAvg7d: 73, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_8', userId: FIXTURE_USER.id, date: new Date('2025-03-25T12:00:00'), checkInValue: 50, calendarPts: 30, totalScore: 80,  rollingAvg7d: 70, createdAt: new Date(), updatedAt: new Date() },
 ];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -167,6 +167,12 @@ export const FIXTURE_EVENTS: CalendarEvent[] = [
   personalEvent('p21_1', 'g21_3', 'Haircut',              'logistical',          '2025-03-21T12:00:00', '2025-03-21T12:45:00'),
   workEvent('w21_3', 'g21_4', 'Team Retrospective',       '2025-03-21T14:00:00', '2025-03-21T15:00:00', 12, true,  'rec_retro'),
   personalEvent('p21_2', 'g21_5', 'Family dinner',        'active_personal',     '2025-03-21T18:30:00', '2025-03-21T20:00:00'),
+
+  // ── Saturday March 23 — 9 cal pts ──────────────────────────────────────────
+  // p23_1: morning run — base 6 (before 9am, no midday, no adjacency)
+  // p23_2: grocery run — base 1 + midday 2 = 3 (no adjacent work meetings)
+  personalEvent('p23_1', 'g23_1', 'Morning run',   'active_personal', '2025-03-23T08:00:00', '2025-03-23T09:00:00'),
+  personalEvent('p23_2', 'g23_2', 'Grocery run',   'logistical',      '2025-03-23T11:00:00', '2025-03-23T12:00:00'),
 
   // ── Tuesday March 25 — 28 cal pts ────────────────────────────────────────
   // evt_001: 8pts, evt_002: 14pts (back-to-back), evt_003: 6pts (midday)
