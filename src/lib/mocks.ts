@@ -65,7 +65,7 @@ export const FIXTURE_USER: User = {
 export const FIXTURE_SCORES: StressScore[] = [
   { id: 'score_0', userId: FIXTURE_USER.id, date: new Date('2025-03-17T12:00:00'), checkInValue: 42, calendarPts: 44, totalScore: 86,  rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_1', userId: FIXTURE_USER.id, date: new Date('2025-03-18T12:00:00'), checkInValue: 52, calendarPts: 48, totalScore: 100, rollingAvg7d: 93, createdAt: new Date(), updatedAt: new Date() },
-  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 35, calendarPts: 22, totalScore: 57,  rollingAvg7d: 81, createdAt: new Date(), updatedAt: new Date() },
+  { id: 'score_2', userId: FIXTURE_USER.id, date: new Date('2025-03-19T12:00:00'), checkInValue: 35, calendarPts: 88, totalScore: 100, rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_3', userId: FIXTURE_USER.id, date: new Date('2025-03-20T12:00:00'), checkInValue: 55, calendarPts: 62, totalScore: 100, rollingAvg7d: 86, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_4', userId: FIXTURE_USER.id, date: new Date('2025-03-21T12:00:00'), checkInValue: 40, calendarPts: 31, totalScore: 71,  rollingAvg7d: 83, createdAt: new Date(), updatedAt: new Date() },
   { id: 'score_5', userId: FIXTURE_USER.id, date: new Date('2025-03-22T12:00:00'), checkInValue: 48, calendarPts: 18, totalScore: 66,  rollingAvg7d: 80, createdAt: new Date(), updatedAt: new Date() },
@@ -135,11 +135,19 @@ export const FIXTURE_EVENTS: CalendarEvent[] = [
   workEvent('w18_3', 'g18_4', 'OKR Planning Session',     '2025-03-18T13:30:00', '2025-03-18T15:00:00', 8,  false, null),
   workEvent('w18_4', 'g18_5', 'Late Customer Call',       '2025-03-18T16:30:00', '2025-03-18T17:30:00', 3,  false, null),
 
-  // ── Wednesday March 19 — 22 cal pts ──────────────────────────────────────
-  // w19_1: 8pts, p19_1: 6pts (midday), w19_2: 8pts
-  workEvent('w19_1', 'g19_1', 'Sprint Planning',          '2025-03-19T10:00:00', '2025-03-19T11:30:00', 12, true,  'rec_sprint'),
-  personalEvent('p19_1', 'g19_2', 'Gym',                  'active_personal',     '2025-03-19T12:00:00', '2025-03-19T13:00:00'),
-  workEvent('w19_2', 'g19_3', '1:1 with Designer',        '2025-03-19T14:30:00', '2025-03-19T15:00:00', 2,  true,  'rec_1on1_des'),
+  // ── Wednesday March 19 — 88 cal pts (busy demo day) ─────────────────────
+  // w19_1: 8pts, w19_2: 14pts (b2b), w19_3: 14pts (b2b),
+  // p19_1: 10pts (base 4 + midday 2 + adjacency 4, 0min gap from w19_3),
+  // w19_4: 8pts (30min gap from p19_1 end — full buffer),
+  // w19_5: 14pts (b2b), w19_6: 8pts (90min gap), w19_7: 12pts (late day)
+  workEvent('w19_1', 'g19_1', 'All-hands — Product Update',   '2025-03-19T09:00:00', '2025-03-19T10:00:00', 38, true,  'rec_allhands_wed'),
+  workEvent('w19_2', 'g19_2', 'Product Review',               '2025-03-19T10:00:00', '2025-03-19T11:00:00', 8,  false, null),
+  workEvent('w19_3', 'g19_3', 'Design Critique',              '2025-03-19T11:00:00', '2025-03-19T12:00:00', 6,  false, null),
+  personalEvent('p19_1', 'g19_4', 'Working lunch',            'active_personal',     '2025-03-19T12:00:00', '2025-03-19T12:30:00'),
+  workEvent('w19_4', 'g19_5', '1:1 with Engineering Lead',    '2025-03-19T13:00:00', '2025-03-19T13:30:00', 2,  true,  'rec_1on1_eng_wed'),
+  workEvent('w19_5', 'g19_6', 'Sprint Planning',              '2025-03-19T14:00:00', '2025-03-19T15:00:00', 12, true,  'rec_sprint'),
+  workEvent('w19_6', 'g19_7', 'Customer Discovery Call',      '2025-03-19T15:30:00', '2025-03-19T16:30:00', 3,  false, null),
+  workEvent('w19_7', 'g19_8', 'Late Stakeholder Sync',        '2025-03-19T16:30:00', '2025-03-19T17:30:00', 5,  false, null),
 
   // ── Thursday March 20 — 62 cal pts ───────────────────────────────────────
   // w20_1: 8pts, w20_2: 14pts (b2b), w20_3: 14pts (b2b),

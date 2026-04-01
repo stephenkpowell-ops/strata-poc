@@ -9,12 +9,11 @@
  *   - Day abbreviation (Mon, Tue, etc.)
  *   - Date number
  *   - Color-coded stress dot based on calendarPts (meeting load only):
- *       green  (bg-emerald-400) = calendarPts < 40  — light day
- *       indigo (bg-indigo-400)  = calendarPts 40–74 — elevated load
- *       orange (bg-orange-400)  = calendarPts >= 75  — high load day
+ *       green  (bg-emerald-400) = calendarPts < 35   — light day
+ *       indigo (bg-indigo-400)  = calendarPts 36–70  — elevated load
+ *       orange (bg-orange-400)  = calendarPts >= 71  — high load day
  *
- * Dots reflect meeting load specifically, consistent with the
- * DailyStressSummary bar on the calendar screen.
+ * Thresholds match the DailyStressSummary bar on the calendar screen.
  *
  * Usage:
  *   <DayStrip
@@ -31,9 +30,9 @@ import { StressScore } from '@/lib/interfaces/types';
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface Props {
-  scores:       StressScore[];
+  scores:        StressScore[];
   selectedIndex: number;
-  onSelectDay:  (index: number) => void;
+  onSelectDay:   (index: number) => void;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -41,8 +40,8 @@ interface Props {
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getDotColor(calendarPts: number): string {
-  if (calendarPts >= 75) return 'bg-orange-400';
-  if (calendarPts >= 40) return 'bg-indigo-400';
+  if (calendarPts >= 71) return 'bg-orange-400';
+  if (calendarPts >= 36) return 'bg-indigo-400';
   return 'bg-emerald-400';
 }
 
