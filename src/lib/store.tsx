@@ -7,8 +7,12 @@
  *
  * State:
  *   - checkInValue:      mutable daily check-in (default 0 / Zero)
- *   - completedSessions: count of breathing reset sessions completed this session
- *   - recoveryPtsTotal:  cumulative pts reduced (−6 per session)
+ *   - completedSessions: count of breathing reset sessions (pre-seeded at 4)
+ *   - recoveryPtsTotal:  cumulative pts reduced (pre-seeded at 24 — 4 × −6 pts)
+ *
+ * Pre-seeded recovery data represents 4 sessions completed across the
+ * 9-day fixture period (Mar 17–24), giving the history screen a realistic
+ * baseline before the user completes any additional sessions.
  *
  * setCheckIn(value)     — updates check-in, recalculates totalScore
  * logRecoverySession()  — increments session count and adds −6 pts
@@ -20,7 +24,9 @@ import type { DailyScoreResult } from './StressEngine';
 import type { User, StressScore, CalendarEvent } from './interfaces/types';
 import { FIXTURE_USER, FIXTURE_SCORES, FIXTURE_EVENTS } from './mocks';
 
-const RECOVERY_PTS_PER_SESSION = 6;
+const RECOVERY_PTS_PER_SESSION    = 6;
+const FIXTURE_COMPLETED_SESSIONS  = 4;
+const FIXTURE_RECOVERY_PTS        = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION; // 24
 
 // ─────────────────────────────────────────────────────────────────────────────
 // STORE SHAPE
@@ -51,8 +57,11 @@ const StrataContext = createContext<StrataState | null>(null);
 export function StrataProvider({ children }: { children: ReactNode }) {
   // Default check-in is 0 (Zero) — user must explicitly log each day
   const [checkInValue,      setCheckInValue]      = useState<number>(0);
-  const [completedSessions, setCompletedSessions] = useState<number>(0);
-  const [recoveryPtsTotal,  setRecoveryPtsTotal]  = useState<number>(0);
+
+  // Pre-seeded with 4 fixture sessions (−24 pts) representing sessions
+  // completed across Mar 17–24. New sessions add on top of this baseline.
+  const [completedSessions, setCompletedSessions] = useState<number>(FIXTURE_COMPLETED_SESSIONS);
+  const [recoveryPtsTotal,  setRecoveryPtsTotal]  = useState<number>(FIXTURE_RECOVERY_PTS);
 
   // Scores with the most recent record updated to reflect current check-in
   const scores: StressScore[] = FIXTURE_SCORES.map((s, i) => {

@@ -161,13 +161,13 @@ function RecoveryDriverRow({
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between">
         <span className="text-sm text-zinc-300">{label}</span>
-        <span className="text-sm font-semibold tabular-nums text-emerald-400">
+        <span className="text-sm font-semibold tabular-nums text-indigo-400">
           {sessions === 0 ? '—' : `−${ptsReduced} pts`}
         </span>
       </div>
       <div className="h-1.5 w-full bg-zinc-800 rounded-full overflow-hidden">
         {sessions > 0 && (
-          <div className="h-full rounded-full bg-emerald-400" style={{ width: barWidth }} />
+          <div className="h-full rounded-full bg-indigo-400" style={{ width: barWidth }} />
         )}
       </div>
       {sessions === 0 && (
