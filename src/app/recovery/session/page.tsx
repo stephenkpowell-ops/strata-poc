@@ -151,7 +151,7 @@ export default function SessionPage() {
             ) : (
               <>
                 <span className="text-3xl font-bold tabular-nums text-white">
-                  {count}
+                  {count - 1}
                 </span>
                 <span className="text-sm font-medium text-indigo-300">
                   {phase.label}
