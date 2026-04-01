@@ -23,9 +23,7 @@ import Sparkline from '@/components/Sparkline';
 
 const CUMULATIVE_WORK_PTS     = 286;
 const CUMULATIVE_PERSONAL_PTS = 58;   // updated: includes Mar 22 personal events (+9 pts)
-// Check-in contribution = actual pts added per day under half-weight model
-// Work days: round(checkIn × 0.5), Rest days: full checkIn value
-const CUMULATIVE_CHECK_IN_PTS = 227;
+
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -191,15 +189,17 @@ function CumulativeDriversCard({
   completedSessions,
   recoveryPtsTotal,
   cumulativeTotalStress,
+  cumulativeCheckInPts,
 }: {
   completedSessions:     number;
   recoveryPtsTotal:      number;
   cumulativeTotalStress: number;
+  cumulativeCheckInPts:  number;
 }) {
   const loadDrivers = [
     { label: 'Work meetings',   pts: CUMULATIVE_WORK_PTS,     fixedColor: undefined          },
     { label: 'Active personal', pts: CUMULATIVE_PERSONAL_PTS, fixedColor: 'indigo' as const  },
-    { label: 'Check-in',        pts: CUMULATIVE_CHECK_IN_PTS, fixedColor: 'zinc'   as const  },
+    { label: 'Check-in',        pts: cumulativeCheckInPts,    fixedColor: 'zinc'   as const  },
   ];
 
   const maxPts = Math.max(...loadDrivers.map(d => d.pts), recoveryPtsTotal, cumulativeTotalStress);
@@ -352,6 +352,21 @@ export default function HistoryPage() {
           completedSessions={completedSessions}
           recoveryPtsTotal={recoveryPtsTotal}
           cumulativeTotalStress={Math.max(0, scores.reduce((sum, s) => sum + s.totalScore, 0) - recoveryPtsTotal)}
+          cumulativeCheckInPts={
+            // Sum check-in contributions for all days except today using fixture values,
+            // then add today's live check-in contribution using the half-weight model.
+            // Work days: round(checkIn × 0.5), Rest days: full checkIn value.
+            scores.slice(0, -1).reduce((sum, s) => {
+              const contrib = s.calendarPts === 0
+                ? s.checkInValue
+                : Math.round(s.checkInValue * 0.5);
+              return sum + contrib;
+            }, 0) + (
+              scores[scores.length - 1]?.calendarPts === 0
+                ? checkInValue
+                : Math.round(checkInValue * 0.5)
+            )
+          }
         />
 
         <div className="flex flex-col gap-2">
