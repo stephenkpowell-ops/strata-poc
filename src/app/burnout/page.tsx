@@ -85,11 +85,12 @@ export default function BurnoutPage() {
   );
 
   // dailyResult is now scoped to today's events only (see store.tsx)
-  // so topDrivers correctly reflects March 25 load breakdown
-  const workDriver     = dailyResult.topDrivers.find(d => d.category === 'work');
+  // topDrivers uses 'Work meetings' as the key for work events (see StressEngine.ts)
+  const workDriver     = dailyResult.topDrivers.find(d => d.category === 'Work meetings');
   const personalDriver = dailyResult.topDrivers.find(d => d.category === 'active_personal');
-  const workPts        = workDriver?.totalPts     ?? calendarPtsToday;
   const personalPts    = personalDriver?.totalPts ?? 0;
+  // workPts = calendar total minus personal pts (avoids relying on the key lookup fallback)
+  const workPts        = Math.max(0, calendarPtsToday - personalPts);
 
   // Peak day label for sparkline insight
   const peakScore = Math.max(...last7Totals);
