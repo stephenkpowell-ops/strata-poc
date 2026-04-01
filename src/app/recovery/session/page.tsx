@@ -15,6 +15,7 @@
  *   - Exhale phase: ring contracts from large to small over 4 seconds
  *   - Hold (after exhale): ring stays small
  *
+ * Counter displays 0–3 (internal state is 1–4, display subtracts 1).
  * After round 4 completes, automatically routes to /recovery/complete.
  * "← Recovery" link always visible to exit without completing.
  */
@@ -28,10 +29,10 @@ import Link from 'next/link';
 // ─────────────────────────────────────────────────────────────────────────────
 
 const PHASES = [
-  { label: 'Inhale', duration: 4, expanded: true  },  // expand during this phase
-  { label: 'Hold',   duration: 4, expanded: true  },  // stay expanded
-  { label: 'Exhale', duration: 4, expanded: false },  // contract during this phase
-  { label: 'Hold',   duration: 4, expanded: false },  // stay contracted
+  { label: 'Inhale', duration: 4, expanded: true  },
+  { label: 'Hold',   duration: 4, expanded: true  },
+  { label: 'Exhale', duration: 4, expanded: false },
+  { label: 'Hold',   duration: 4, expanded: false },
 ];
 
 const TOTAL_ROUNDS = 4;
@@ -181,8 +182,10 @@ export default function SessionPage() {
         )}
       </div>
 
-      {/* Begin button */}
+      {/* Bottom actions */}
       <div className="flex flex-col items-center gap-3 w-full">
+
+        {/* Begin button — only before session starts */}
         {!started && (
           <button
             onClick={() => setStarted(true)}
@@ -191,14 +194,17 @@ export default function SessionPage() {
             Begin
           </button>
         )}
+
+        {/* Cancel button — visible once session is running */}
         {started && !completed && (
           <Link
             href="/recovery"
-            className="text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
+            className="w-full flex items-center justify-center border border-zinc-700 hover:border-zinc-500 hover:bg-zinc-900 text-zinc-400 hover:text-zinc-200 font-medium text-sm rounded-2xl py-3.5 transition-colors"
           >
             Cancel session
           </Link>
         )}
+
       </div>
 
     </div>
