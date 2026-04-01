@@ -9,9 +9,10 @@
  * context so every screen can access them via the useStrata() hook without
  * prop drilling.
  *
- * This is the only data source for the POC — no database, no API calls.
- * When the MVP backend is ready, this file is replaced by real data fetching.
- * Nothing else in the app needs to change.
+ * The store supports a mutable check-in value. Calling setCheckIn()
+ * updates the check-in for the most recent score record and recomputes
+ * totalScore immediately. This allows the home screen check-in card to
+ * update the score in real time.
  *
  * Usage:
  *
@@ -21,10 +22,10 @@
  *
  *   // 2. Use in any client component:
  *   import { useStrata } from '@/lib/store';
- *   const { user, scores, events, dailyResult } = useStrata();
+ *   const { user, scores, events, dailyResult, checkInValue, setCheckIn } = useStrata();
  */
 
-import { createContext, useContext, ReactNode } from 'react';
+import { createContext, useContext, useState, ReactNode } from 'react';
 import { computeDailyScore } from './StressEngine';
 import type { DailyScoreResult } from './StressEngine';
 import type { User, StressScore, CalendarEvent } from './interfaces/types';
@@ -35,30 +36,13 @@ import { FIXTURE_USER, FIXTURE_SCORES, FIXTURE_EVENTS } from './mocks';
 // ─────────────────────────────────────────────────────────────────────────────
 
 interface StrataState {
-  user:        User;
-  scores:      StressScore[];
-  events:      CalendarEvent[];
-  dailyResult: DailyScoreResult;  // StressEngine output for the fixture day
+  user:         User;
+  scores:       StressScore[];
+  events:       CalendarEvent[];
+  dailyResult:  DailyScoreResult;
+  checkInValue: number;
+  setCheckIn:   (value: number) => void;
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// INITIAL STATE
-// Computed once at module load — fixture data is static so this never needs
-// to re-run during the POC.
-// ─────────────────────────────────────────────────────────────────────────────
-
-const initialState: StrataState = {
-  user:   FIXTURE_USER,
-  scores: FIXTURE_SCORES,
-  events: FIXTURE_EVENTS,
-  dailyResult: computeDailyScore({
-    events:        FIXTURE_EVENTS,
-    calendarPrefs: [
-      { includeInScoring: true, contextSwitchPenalties: true, recoveryEventsReduce: true },
-    ],
-    checkInValue: 0,
-  }),
-};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // CONTEXT
@@ -68,12 +52,46 @@ const StrataContext = createContext<StrataState | null>(null);
 
 // ─────────────────────────────────────────────────────────────────────────────
 // PROVIDER
-// Add <StrataProvider> to src/app/layout.tsx wrapping {children}.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function StrataProvider({ children }: { children: ReactNode }) {
+  // Check-in value for the most recent day — mutable via setCheckIn
+  const [checkInValue, setCheckInValue] = useState<number>(
+    FIXTURE_SCORES[FIXTURE_SCORES.length - 1]?.checkInValue ?? 50
+  );
+
+  // Scores with the most recent record updated to reflect current check-in
+  const scores: StressScore[] = FIXTURE_SCORES.map((s, i) => {
+    if (i !== FIXTURE_SCORES.length - 1) return s;
+    return {
+      ...s,
+      checkInValue,
+      totalScore: Math.min(100, checkInValue + s.calendarPts),
+    };
+  });
+
+  // Recompute daily result whenever check-in changes
+  const dailyResult: DailyScoreResult = computeDailyScore({
+    events:        FIXTURE_EVENTS,
+    calendarPrefs: [
+      { includeInScoring: true, contextSwitchPenalties: true, recoveryEventsReduce: true },
+    ],
+    checkInValue,
+  });
+
+  const setCheckIn = (value: number) => setCheckInValue(value);
+
+  const state: StrataState = {
+    user:   FIXTURE_USER,
+    scores,
+    events: FIXTURE_EVENTS,
+    dailyResult,
+    checkInValue,
+    setCheckIn,
+  };
+
   return (
-    <StrataContext.Provider value={initialState}>
+    <StrataContext.Provider value={state}>
       {children}
     </StrataContext.Provider>
   );

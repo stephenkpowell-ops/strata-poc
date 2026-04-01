@@ -3,18 +3,23 @@
 /**
  * src/app/home/page.tsx
  *
- * Home screen — hero stress score, trial progress bar, burnout alert banner.
+ * Home screen — hero stress score, check-in, burnout alert, trial bar.
  *
- * Current state (Steps 15, 16, 17, 18):
+ * Current state (Steps 15, 16, 17, 18 + check-in enhancement):
  *   Step 15 — ScoreCard with sparkline and rolling average
- *   Step 16 — Trial progress bar showing days remaining from FIXTURE_USER
+ *   Check-in — Daily check-in card between score card and burnout banner
  *   Step 17 — Burnout alert banner (wired to /burnout route)
+ *   Step 16 — Trial progress bar
  *   Step 18 — Navigation tab bar (in layout.tsx)
+ *
+ * The check-in value updates the store in real time, recalculating
+ * totalScore for today and updating the score card immediately.
  */
 
 import Link from 'next/link';
 import { useStrata } from '@/lib/store';
 import ScoreCard from '@/components/ScoreCard';
+import CheckInCard from '@/components/CheckInCard';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // HELPERS
@@ -75,7 +80,6 @@ function TrialProgressBar({
 
 // ─────────────────────────────────────────────────────────────────────────────
 // BURNOUT ALERT BANNER
-// Now a Link — tapping routes to the full burnout alert screen
 // ─────────────────────────────────────────────────────────────────────────────
 
 function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
@@ -86,15 +90,12 @@ function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
       href="/burnout"
       className="flex items-start gap-3 bg-amber-950 border border-amber-800 rounded-2xl p-4 hover:bg-amber-900 transition-colors"
     >
-      {/* Pulsing dot */}
       <div className="relative flex-shrink-0 mt-0.5">
         <span className="flex h-2.5 w-2.5">
           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
           <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-400" />
         </span>
       </div>
-
-      {/* Text */}
       <div className="flex flex-col gap-1 flex-1">
         <span className="text-xs font-semibold uppercase tracking-wider text-amber-400">
           Performance Degradation Alert
@@ -115,7 +116,7 @@ function BurnoutAlertBanner({ rollingAvg }: { rollingAvg: number }) {
 // ─────────────────────────────────────────────────────────────────────────────
 
 export default function HomePage() {
-  const { scores, user } = useStrata();
+  const { scores, user, checkInValue, setCheckIn } = useStrata();
 
   const latest = scores[scores.length - 1];
   const last7  = scores.slice(-7).map(s => s.totalScore);
@@ -152,7 +153,13 @@ export default function HomePage() {
           recentScores={last7}
         />
 
-        {/* Step 17 — Burnout alert banner — routes to /burnout */}
+        {/* Daily check-in */}
+        <CheckInCard
+          currentValue={checkInValue}
+          onSelect={setCheckIn}
+        />
+
+        {/* Step 17 — Burnout alert banner */}
         <BurnoutAlertBanner rollingAvg={latest.rollingAvg7d} />
 
         {/* Step 16 — Trial progress bar */}
