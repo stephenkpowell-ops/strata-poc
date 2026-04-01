@@ -5,13 +5,11 @@
  *
  * Client-side data store for the Strata POC.
  *
- * Recovery session tracking has two separate counters:
+ * Recovery session tracking uses four separate counters:
  *   todaySessions    — sessions completed today (Mar 25), starts at 0
  *   todayRecoveryPts — pts reduced today (6 per session), starts at 0
- *   completedSessions  — total sessions across all 9 days (pre-seeded at 4
- *                        for Mar 17–24, increments with today's sessions)
- *   recoveryPtsTotal   — total pts reduced across all 9 days (pre-seeded
- *                        at 24, increments with today's sessions)
+ *   completedSessions  — total sessions across all 9 days (pre-seeded at 4)
+ *   recoveryPtsTotal   — total pts reduced across all 9 days (pre-seeded at 24)
  *
  * The burnout page uses todaySessions / todayRecoveryPts.
  * The history page uses completedSessions / recoveryPtsTotal.
@@ -23,10 +21,10 @@ import type { DailyScoreResult } from './StressEngine';
 import type { User, StressScore, CalendarEvent } from './interfaces/types';
 import { FIXTURE_USER, FIXTURE_SCORES, FIXTURE_EVENTS } from './mocks';
 
-const RECOVERY_PTS_PER_SESSION    = 6;
-const FIXTURE_COMPLETED_SESSIONS  = 4;   // pre-seeded for Mar 17–24
-const FIXTURE_RECOVERY_PTS        = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION;
-const HISTORY_COUNT               = 9;
+const RECOVERY_PTS_PER_SESSION   = 6;
+const FIXTURE_COMPLETED_SESSIONS = 4;
+const FIXTURE_RECOVERY_PTS       = FIXTURE_COMPLETED_SESSIONS * RECOVERY_PTS_PER_SESSION;
+const HISTORY_COUNT              = 9;
 
 const TODAY = new Date('2025-03-25T12:00:00');
 
@@ -51,14 +49,10 @@ interface StrataState {
   dailyResult:        DailyScoreResult;
   checkInValue:       number;
   setCheckIn:         (value: number) => void;
-  // Today only (Mar 25) — used by burnout page
   todaySessions:      number;
   todayRecoveryPts:   number;
-  // All-time cumulative — used by history page
   completedSessions:  number;
   recoveryPtsTotal:   number;
-  todaySessions:      number;
-  todayRecoveryPts:   number;
   logRecoverySession: () => void;
 }
 
@@ -74,10 +68,8 @@ const StrataContext = createContext<StrataState | null>(null);
 
 export function StrataProvider({ children }: { children: ReactNode }) {
   const [checkInValue,      setCheckInValue]      = useState<number>(0);
-  // Today's sessions start at 0
   const [todaySessions,     setTodaySessions]     = useState<number>(0);
   const [todayRecoveryPts,  setTodayRecoveryPts]  = useState<number>(0);
-  // Historical total pre-seeded at 4 sessions / 24 pts
   const [completedSessions, setCompletedSessions] = useState<number>(FIXTURE_COMPLETED_SESSIONS);
   const [recoveryPtsTotal,  setRecoveryPtsTotal]  = useState<number>(FIXTURE_RECOVERY_PTS);
 
@@ -122,8 +114,6 @@ export function StrataProvider({ children }: { children: ReactNode }) {
     todayRecoveryPts,
     completedSessions,
     recoveryPtsTotal,
-    todaySessions,
-    todayRecoveryPts,
     logRecoverySession,
   };
 
