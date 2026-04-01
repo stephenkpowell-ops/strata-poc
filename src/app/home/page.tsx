@@ -5,15 +5,12 @@
  *
  * Home screen — hero stress score, check-in, burnout alert, trial bar.
  *
- * Current state (Steps 15, 16, 17, 18 + check-in enhancement):
- *   Step 15 — ScoreCard with sparkline and rolling average
- *   Check-in — Daily check-in card between score card and burnout banner
- *   Step 17 — Burnout alert banner (wired to /burnout route)
- *   Step 16 — Trial progress bar
- *   Step 18 — Navigation tab bar (in layout.tsx)
- *
- * The check-in value updates the store in real time, recalculating
- * totalScore for today and updating the score card immediately.
+ * Current state:
+ *   - ScoreCard shows total score with Calendar + Check-in breakdown
+ *   - CheckInCard allows user to update their self-reported stress level
+ *   - Burnout alert banner fires when rollingAvg > 70
+ *   - Trial progress bar shows days remaining
+ *   - Navigation tab bar in layout.tsx
  */
 
 import Link from 'next/link';
@@ -146,23 +143,25 @@ export default function HomePage() {
 
       <div className="flex flex-col gap-4 px-6 pb-8">
 
-        {/* Step 15 — Score card */}
+        {/* Score card — shows Calendar + Check-in = Total breakdown */}
         <ScoreCard
           currentScore={latest.totalScore}
+          calendarPts={latest.calendarPts}
+          checkInValue={checkInValue}
           rollingAvg={latest.rollingAvg7d}
           recentScores={last7}
         />
 
-        {/* Daily check-in */}
+        {/* Daily check-in — updating this recalculates totalScore live */}
         <CheckInCard
           currentValue={checkInValue}
           onSelect={setCheckIn}
         />
 
-        {/* Step 17 — Burnout alert banner */}
+        {/* Burnout alert banner */}
         <BurnoutAlertBanner rollingAvg={latest.rollingAvg7d} />
 
-        {/* Step 16 — Trial progress bar */}
+        {/* Trial progress bar */}
         <TrialProgressBar
           trialStartedAt={user.trialStartedAt}
           trialEndsAt={user.trialEndsAt}

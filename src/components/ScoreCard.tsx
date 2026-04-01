@@ -6,11 +6,12 @@
  * The hero stress score card on the home screen.
  *
  * Displays:
- *   - Large score number, color-coded by severity
+ *   - Large total score number, color-coded by severity
  *   - Status label (Managing · Elevated · High Load)
  *   - "7-day trend" label above the sparkline
  *   - Sparkline showing the last 7 scores with threshold line
- *   - Rolling 7-day average below the sparkline
+ *   - Score breakdown: Calendar pts + Check-in = Total
+ *   - Rolling 7-day average
  *
  * Color coding by totalScore:
  *   green  (< 50)  — Managing
@@ -18,7 +19,13 @@
  *   orange (>= 75) — High Load
  *
  * Usage:
- *   <ScoreCard currentScore={86} rollingAvg={76} recentScores={last7} />
+ *   <ScoreCard
+ *     currentScore={86}
+ *     calendarPts={28}
+ *     checkInValue={58}
+ *     rollingAvg={71}
+ *     recentScores={last7}
+ *   />
  */
 
 import Sparkline from './Sparkline';
@@ -29,8 +36,10 @@ import Sparkline from './Sparkline';
 
 interface Props {
   currentScore:  number;
+  calendarPts:   number;
+  checkInValue:  number;
   rollingAvg:    number;
-  recentScores:  number[];  // last 7 totalScore values, oldest first
+  recentScores:  number[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -65,11 +74,17 @@ function getAvgColor(avg: number): string {
 // COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function ScoreCard({ currentScore, rollingAvg, recentScores }: Props) {
-  const scoreColor      = getScoreColor(currentScore);
-  const statusLabel     = getStatusLabel(currentScore);
-  const statusBadge     = getStatusBadgeStyle(currentScore);
-  const avgColor        = getAvgColor(rollingAvg);
+export default function ScoreCard({
+  currentScore,
+  calendarPts,
+  checkInValue,
+  rollingAvg,
+  recentScores,
+}: Props) {
+  const scoreColor  = getScoreColor(currentScore);
+  const statusLabel = getStatusLabel(currentScore);
+  const statusBadge = getStatusBadgeStyle(currentScore);
+  const avgColor    = getAvgColor(rollingAvg);
 
   return (
     <div className="flex flex-col gap-4 bg-zinc-900 rounded-2xl p-6">
@@ -95,6 +110,39 @@ export default function ScoreCard({ currentScore, rollingAvg, recentScores }: Pr
           {currentScore}
         </span>
         <span className="text-zinc-500 text-sm mb-2">/ 100</span>
+      </div>
+
+      {/* Score breakdown */}
+      <div className="flex items-center gap-2 bg-zinc-800 rounded-xl px-4 py-3">
+        {/* Calendar pts */}
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-xs text-zinc-500">Calendar</span>
+          <span className="text-base font-bold text-indigo-400 tabular-nums">
+            {calendarPts}
+          </span>
+        </div>
+
+        {/* Plus sign */}
+        <span className="text-zinc-600 text-lg font-light">+</span>
+
+        {/* Check-in */}
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-xs text-zinc-500">Check-in</span>
+          <span className="text-base font-bold text-indigo-400 tabular-nums">
+            {checkInValue}
+          </span>
+        </div>
+
+        {/* Equals sign */}
+        <span className="text-zinc-600 text-lg font-light">=</span>
+
+        {/* Total */}
+        <div className="flex flex-col items-center flex-1">
+          <span className="text-xs text-zinc-500">Total</span>
+          <span className={`text-base font-bold tabular-nums ${scoreColor}`}>
+            {currentScore}
+          </span>
+        </div>
       </div>
 
       {/* Sparkline */}
