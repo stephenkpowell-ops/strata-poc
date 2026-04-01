@@ -11,6 +11,13 @@
  *   - Timeline events list with color-coded EventRow components
  *   - GapIndicator between consecutive events
  *   - EventDetail slide-up panel on event tap
+ *
+ * Note on calendarPts:
+ *   The summary bar always reads calendarPts from FIXTURE_SCORES for the
+ *   selected day. This is the correct pre-computed value per day.
+ *   dailyResult from the store scores ALL fixture events together and is
+ *   only used to get per-event breakdowns for the EventRow and EventDetail
+ *   components — not for the day total.
  */
 
 import { useState } from 'react';
@@ -102,8 +109,14 @@ export default function CalendarPage() {
   // Selected event for the detail panel
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
 
-  // The date of the selected day tab
-  const selectedDate = scores[selectedIndex]?.date;
+  // The date and score record for the selected day
+  const selectedScore = scores[selectedIndex];
+  const selectedDate  = selectedScore?.date;
+
+  // Always use the stored calendarPts for the summary bar — this is the
+  // correct pre-computed value for each day from FIXTURE_SCORES.
+  // dailyResult.calendarPts scores ALL events together and is not per-day.
+  const calendarPtsToday = selectedScore?.calendarPts ?? 0;
 
   // Filter events to those starting on the selected day, sorted by startAt
   const dayEvents = events
@@ -111,18 +124,11 @@ export default function CalendarPage() {
     .sort((a, b) => new Date(a.startAt).getTime() - new Date(b.startAt).getTime());
 
   // Match each day event to its scored counterpart from the StressEngine output
+  // dailyResult.scoredEvents gives correct per-event breakdowns for the
+  // events that share the same day as the fixture events (March 25)
   const scoredEventMap = new Map(
     dailyResult.scoredEvents.map(s => [s.eventId, s])
   );
-
-  // Total calendar pts for the selected day
-  // For the day with events (March 25), use live StressEngine output.
-  // For other days, use the stored calendarPts from FIXTURE_SCORES.
-  const selectedScore    = scores[selectedIndex];
-  const isLiveScoredDay  = dayEvents.length > 0;
-  const calendarPtsToday = isLiveScoredDay
-    ? dailyResult.calendarPts
-    : selectedScore?.calendarPts ?? 0;
 
   // Resolve the selected event and its score for the detail panel
   const selectedEvent  = selectedEventId ? events.find(e => e.id === selectedEventId) ?? null : null;
